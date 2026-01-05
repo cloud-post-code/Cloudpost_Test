@@ -43,6 +43,12 @@ export const products = pgTable("products", {
   type: integer("product_type").notNull().default(0),
   active: boolean("product_active").notNull().default(true),
   deleted: boolean("product_deleted").notNull().default(false),
+  featured: boolean("product_featured").notNull().default(false),
+  canBeCustom: boolean("product_can_be_custom").notNull().default(false),
+  customPrompt: text("product_custom_prompt"),
+  occasion: varchar("product_occasion", { length: 100 }),
+  weight: decimal("product_weight", { precision: 10, scale: 2 }),
+  weightUnit: integer("product_weight_unit"),
   createdAt: timestamp("product_created_at").defaultNow(),
   updatedAt: timestamp("product_updated_at").defaultNow(),
 });
