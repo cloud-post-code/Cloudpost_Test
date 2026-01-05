@@ -1,8 +1,7 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm install && npm run build --filter=@cloudpost/api..."
+    "builder": "NIXPACKS"
   },
   "deploy": {
     "startCommand": "cd apps/api && node dist/apps/api/src/main.js",
