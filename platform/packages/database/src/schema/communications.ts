@@ -4,7 +4,7 @@
  * Messages, notifications, SMS, and social platforms
  */
 
-import { pgTable, text, timestamp, integer, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, boolean, serial } from 'drizzle-orm/pg-core';
 import { users } from './users';
 
 /**
@@ -12,9 +12,9 @@ import { users } from './users';
  * Messages related to catalog requests
  */
 export const catalogRequestMessages = pgTable('tbl_catalog_request_messages', {
-  scatrequestmsgId: integer('scatrequestmsg_id').primaryKey().generatedAlwaysAsIdentity(),
+  scatrequestmsgId: serial('scatrequestmsg_id').primaryKey(),
   scatrequestmsgScatrequestId: integer('scatrequestmsg_scatrequest_id').notNull(),
-  scatrequestmsgFromUserId: integer('scatrequestmsg_from_user_id').references(() => users.userId).notNull(),
+  scatrequestmsgFromUserId: integer('scatrequestmsg_from_user_id').references(() => users.id).notNull(),
   scatrequestmsgFromAdminId: integer('scatrequestmsg_from_admin_id').notNull(),
   scatrequestmsgMsg: text('scatrequestmsg_msg').notNull(),
   scatrequestmsgDate: timestamp('scatrequestmsg_date').notNull(),
@@ -26,7 +26,7 @@ export const catalogRequestMessages = pgTable('tbl_catalog_request_messages', {
  * Mobile push notifications
  */
 export const pushNotifications = pgTable('tbl_push_notifications', {
-  pnotificationId: integer('pnotification_id').primaryKey().generatedAlwaysAsIdentity(),
+  pnotificationId: serial('pnotification_id').primaryKey(),
   pnotificationType: integer('pnotification_type').notNull(),
   pnotificationLangId: integer('pnotification_lang_id').notNull(),
   pnotificationTitle: text('pnotification_title').notNull(),
@@ -47,7 +47,7 @@ export const pushNotifications = pgTable('tbl_push_notifications', {
  * Historical SMS messages
  */
 export const smsArchives = pgTable('tbl_sms_archives', {
-  smsarchiveId: integer('smsarchive_id').primaryKey().generatedAlwaysAsIdentity(),
+  smsarchiveId: serial('smsarchive_id').primaryKey(),
   smsarchiveResponseId: text('smsarchive_response_id').notNull(),
   smsarchiveTo: text('smsarchive_to').notNull(),
   smsarchiveTplName: text('smsarchive_tpl_name').notNull(),
@@ -77,8 +77,8 @@ export const smsTemplates = pgTable('tbl_sms_templates', {
  * User social media links
  */
 export const socialPlatforms = pgTable('tbl_social_platforms', {
-  splatformId: integer('splatform_id').primaryKey().generatedAlwaysAsIdentity(),
-  splatformUserId: integer('splatform_user_id').references(() => users.userId).notNull(),
+  splatformId: serial('splatform_id').primaryKey(),
+  splatformUserId: integer('splatform_user_id').references(() => users.id).notNull(),
   splatformIdentifier: text('splatform_identifier').notNull(),
   splatformUrl: text('splatform_url').notNull(),
   splatformActive: boolean('splatform_active').notNull(),
