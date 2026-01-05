@@ -331,12 +331,15 @@ function ShopPageContent() {
             <Controller
               name="vacationStatus"
               control={control}
-              render={({ field }) => (
+              render={({ field: { value, onChange, onBlur, name, ref } }) => (
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    {...field}
-                    checked={field.value}
+                    name={name}
+                    ref={ref}
+                    checked={value || false}
+                    onChange={(e) => onChange(e.target.checked)}
+                    onBlur={onBlur}
                     className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">Vacation Status</span>
