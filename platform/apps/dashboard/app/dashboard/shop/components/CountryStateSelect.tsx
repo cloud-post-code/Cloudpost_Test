@@ -57,7 +57,7 @@ export function CountrySelect({
           <select
             value={selectedCountryCode}
             onChange={(e) => {
-              const code = e.target.value || undefined;
+              const code = e.target.value || "US";
               setSelectedCountryCode(code);
               // Store the ISO code - in production, map to database ID
               field.onChange(code);

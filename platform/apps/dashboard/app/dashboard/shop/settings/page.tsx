@@ -6,8 +6,7 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useShopForm } from "../hooks/useShopForm";
-import { useForm, Controller } from "react-hook-form";
-import { UpdateShopRequest } from "../api/shopApi";
+import { Controller } from "react-hook-form";
 import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
@@ -51,7 +50,7 @@ function FormInput({
 }
 
 function ShopSettingsPageContent() {
-  const { form, shopData, isLoading, onSubmit } = useShopForm();
+  const { form, isLoading, onSubmit } = useShopForm();
   const { register, handleSubmit, control, formState: { errors } } = form;
 
   if (isLoading) {

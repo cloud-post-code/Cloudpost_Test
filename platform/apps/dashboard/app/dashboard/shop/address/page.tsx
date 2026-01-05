@@ -6,8 +6,6 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useShopForm } from "../hooks/useShopForm";
-import { useForm, Controller } from "react-hook-form";
-import { UpdateShopRequest } from "../api/shopApi";
 import { cn } from "@/lib/utils";
 import { CountrySelect, StateSelect } from "../components/CountryStateSelect";
 import { useState, useEffect } from "react";
@@ -53,7 +51,7 @@ function FormInput({
 }
 
 function ShopAddressPageContent() {
-  const { form, shopData, isLoading, onSubmit } = useShopForm();
+  const { form, isLoading, onSubmit } = useShopForm();
   const { register, handleSubmit, control, watch, formState: { errors } } = form;
   const [countryCode, setCountryCode] = useState<string>("US");
   const [returnCountryCode, setReturnCountryCode] = useState<string>("US");
@@ -62,7 +60,7 @@ function ShopAddressPageContent() {
   // Reset state when country changes
   useEffect(() => {
     if (countryCode) {
-      form.setValue("stateId", "");
+      form.setValue("stateId", undefined);
     }
   }, [countryCode, form]);
 

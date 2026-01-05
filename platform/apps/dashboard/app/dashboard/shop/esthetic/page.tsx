@@ -6,17 +6,14 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useShopForm } from "../hooks/useShopForm";
-import { useForm } from "react-hook-form";
-import { UpdateShopRequest } from "../api/shopApi";
-import { cn } from "@/lib/utils";
 import { ImageCropper } from "../components/ImageCropper";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
 
 function ShopEstheticPageContent() {
-  const { form, shopData, isLoading, onSubmit } = useShopForm();
-  const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
+  const { form, isLoading, onSubmit } = useShopForm();
+  const { handleSubmit, watch, setValue } = form;
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [showLogoCropper, setShowLogoCropper] = useState(false);
 

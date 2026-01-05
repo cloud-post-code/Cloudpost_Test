@@ -6,17 +6,15 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useShopForm } from "../hooks/useShopForm";
-import { useForm, Controller } from "react-hook-form";
-import { UpdateShopRequest, PickupLocation } from "../api/shopApi";
-import { cn } from "@/lib/utils";
+import { Controller } from "react-hook-form";
 import { CountrySelect, StateSelect } from "../components/CountryStateSelect";
 import { useState } from "react";
 
 const queryClient = new QueryClient();
 
 function ShopPickupPageContent() {
-  const { form, shopData, isLoading, onSubmit } = useShopForm();
-  const { register, handleSubmit, control, formState: { errors } } = form;
+  const { form, isLoading, onSubmit } = useShopForm();
+  const { handleSubmit, control, formState: { errors } } = form;
   const [countryCodes, setCountryCodes] = useState<Record<number, string>>({});
 
   if (isLoading) {

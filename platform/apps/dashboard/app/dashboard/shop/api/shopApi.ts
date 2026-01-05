@@ -41,8 +41,8 @@ export interface ShopData {
 
 export interface PickupLocation {
   id?: number;
-  countryId?: number;
-  stateId?: number;
+  countryId?: number | string;
+  stateId?: number | string;
   city?: string;
   address1?: string;
   address2?: string;
@@ -57,16 +57,16 @@ export interface UpdateShopRequest {
   url?: string;
   phoneDcode?: string;
   phone?: string;
-  countryId?: number;
-  stateId?: number;
+  countryId?: number | string;
+  stateId?: number | string;
   city?: string;
   address1?: string;
   address2?: string;
   postalCode?: string;
   returnAddressSame?: boolean;
   returnAddress?: {
-    countryId?: number;
-    stateId?: number;
+    countryId?: number | string;
+    stateId?: number | string;
     city?: string;
     address1?: string;
     address2?: string;
