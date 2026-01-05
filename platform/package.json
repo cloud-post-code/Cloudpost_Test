@@ -13,7 +13,7 @@
     "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
     "type-check": "turbo run type-check",
     "clean": "turbo run clean",
-    "start": "cd apps/api && npm run start:prod"
+    "start": "cd apps/api && node dist/apps/api/src/main.js"
   },
   "devDependencies": {
     "@turbo/gen": "^1.11.2",
