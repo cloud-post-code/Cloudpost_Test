@@ -11,7 +11,6 @@ import {
   timestamp,
   boolean,
 } from "drizzle-orm/pg-core";
-import { users } from "./users";
 import { states } from "./reference";
 import { countries } from "./reference";
 

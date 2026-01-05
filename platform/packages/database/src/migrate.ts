@@ -5,12 +5,11 @@
 
 import "dotenv/config";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
-import { client } from "./db";
-import * as schema from "./schema";
+import { db } from "./db";
 
 async function runMigrations() {
   console.log("Running migrations...");
-  await migrate(client, { migrationsFolder: "./src/migrations" });
+  await migrate(db, { migrationsFolder: "./src/migrations" });
   console.log("Migrations completed!");
   process.exit(0);
 }

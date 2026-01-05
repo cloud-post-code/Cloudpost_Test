@@ -12,10 +12,8 @@ import {
   boolean,
   text,
   decimal,
-  bigint,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
-import { shops } from "./shops";
 
 // Product categories table
 export const productCategories = pgTable("product_categories", {

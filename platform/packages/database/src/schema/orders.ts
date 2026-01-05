@@ -14,11 +14,8 @@ import {
   decimal,
   bigint,
   text,
-  date,
-  time,
 } from "drizzle-orm/pg-core";
 import { users } from "./users";
-import { addresses } from "./addresses";
 import { sellerProducts } from "./products";
 
 // Order status table

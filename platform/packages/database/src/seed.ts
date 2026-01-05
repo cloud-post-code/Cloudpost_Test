@@ -7,7 +7,6 @@ import "dotenv/config";
 import { faker } from "@faker-js/faker";
 import { db } from "./db";
 import * as schema from "./schema";
-import { sql } from "drizzle-orm";
 
 async function seed() {
   console.log("Starting database seeding...");
@@ -65,7 +64,7 @@ async function seed() {
       states.map((state) => ({
         stateId: state.id,
         langId: enLangId,
-        name: state.code === "CA" ? "California" : state.code,
+        name: state.code === "CA" ? "California" : (state.code || ""),
       }))
     );
 
@@ -103,7 +102,7 @@ async function seed() {
           name: faker.person.fullName(),
           phoneDcode: "+1",
           phone: BigInt(faker.phone.number().replace(/\D/g, "").slice(0, 10)),
-          dob: faker.date.birthdate({ min: 25, max: 65, mode: "age" }),
+          dob: faker.date.birthdate({ min: 25, max: 65, mode: "age" }).toISOString().split('T')[0],
           profileInfo: faker.lorem.paragraph(),
           address1: faker.location.streetAddress(),
           address2: faker.location.secondaryAddress(),
@@ -141,7 +140,7 @@ async function seed() {
           name: faker.person.fullName(),
           phoneDcode: "+1",
           phone: BigInt(faker.phone.number().replace(/\D/g, "").slice(0, 10)),
-          dob: faker.date.birthdate({ min: 18, max: 80, mode: "age" }),
+          dob: faker.date.birthdate({ min: 18, max: 80, mode: "age" }).toISOString().split('T')[0],
           profileInfo: "",
           address1: faker.location.streetAddress(),
           address2: faker.location.secondaryAddress(),
