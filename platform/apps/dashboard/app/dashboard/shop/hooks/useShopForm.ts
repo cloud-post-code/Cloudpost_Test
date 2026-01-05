@@ -1,85 +1,33 @@
 /**
- * Custom hook for shop form management
- * Handles form state, validation, and submission
+ * Shared hook for shop form management
  */
 
-import React from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getShop, updateShop, ShopData, UpdateShopRequest } from "../api/shopApi";
+import { useEffect } from "react";
 
-const pickupLocationSchema = z.object({
-  id: z.number().optional(),
-  countryId: z.number().optional(),
-  stateId: z.number().optional(),
-  city: z.string().optional(),
-  address1: z.string().optional(),
-  address2: z.string().optional(),
-  postalCode: z.string().optional(),
-  lat: z.string().optional(),
-  lng: z.string().optional(),
-  isActive: z.boolean().optional(),
-});
-
-const shopFormSchema = z.object({
-  // General Info
-  name: z.string().min(1, "Shop name is required"),
-  url: z.string().optional(),
-  phoneDcode: z.string().optional(),
-  phone: z.string().optional(),
-  // Address
-  countryId: z.number().optional(),
-  stateId: z.number().optional(),
-  city: z.string().optional(),
-  address1: z.string().optional(),
-  address2: z.string().optional(),
-  postalCode: z.string().optional(),
-  returnAddressSame: z.boolean().default(true),
-  returnAddress: z
-    .object({
-      countryId: z.number().optional(),
-      stateId: z.number().optional(),
-      city: z.string().optional(),
-      address1: z.string().optional(),
-      address2: z.string().optional(),
-      postalCode: z.string().optional(),
-    })
-    .optional(),
-  // Settings
-  vacationStatus: z.boolean().default(false),
-  returnEligibilityDays: z.number().min(0).optional(),
-  cancellationEligibilityDays: z.number().min(0).optional(),
-  fulfillmentMethod: z.number().default(1),
-  // Shop Esthetic
-  logo: z.string().optional(),
-  banner: z.string().optional(),
-  // Shop Info
-  description: z.string().optional(),
-  sellerInformation: z.string().optional(),
-  paymentPolicy: z.string().optional(),
-  shippingPolicy: z.string().optional(),
-  refundPolicy: z.string().optional(),
-  additionalInformation: z.string().optional(),
-  // Pickup Locations
-  pickupLocations: z.array(pickupLocationSchema).default([]),
-});
-
-export type ShopFormData = z.infer<typeof shopFormSchema>;
-
-export function useShopForm(langId: number = 1) {
+export function useShopForm() {
   const queryClient = useQueryClient();
 
   // Fetch shop data
-  const { data: shopData, isLoading, error } = useQuery<ShopData>({
-    queryKey: ["shop", langId],
-    queryFn: () => getShop(langId),
+  const { data: shopData, isLoading } = useQuery<ShopData>({
+    queryKey: ["shop", 1],
+    queryFn: () => getShop(1),
   });
 
-  // Initialize form
-  const form = useForm<ShopFormData>({
-    resolver: zodResolver(shopFormSchema),
+  // Update mutation
+  const updateMutation = useMutation({
+    mutationFn: (data: UpdateShopRequest) => updateShop(data, 1),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["shop", 1] });
+    },
+    onError: (error: Error) => {
+      console.error("Failed to update shop:", error);
+    },
+  });
+
+  const form = useForm<UpdateShopRequest>({
     defaultValues: {
       name: "",
       url: "",
@@ -92,8 +40,8 @@ export function useShopForm(langId: number = 1) {
     },
   });
 
-  // Update form when data loads
-  React.useEffect(() => {
+  // Reset form when data loads
+  useEffect(() => {
     if (shopData) {
       form.reset({
         name: shopData.name || "",
@@ -124,31 +72,22 @@ export function useShopForm(langId: number = 1) {
     }
   }, [shopData, form]);
 
-  // Update mutation
-  const updateMutation = useMutation({
-    mutationFn: (data: UpdateShopRequest) => updateShop(data, langId),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["shop", langId] });
-    },
-  });
-
-  const onSubmit = async (data: ShopFormData) => {
-    try {
-      await updateMutation.mutateAsync(data);
-    } catch (error) {
-      console.error("Failed to update shop:", error);
-      throw error;
-    }
+  const onSubmit = (data: UpdateShopRequest) => {
+    updateMutation.mutate(data, {
+      onSuccess: () => {
+        alert("Shop updated successfully!");
+      },
+      onError: (error: Error) => {
+        alert(`Failed to update shop: ${error.message}`);
+      },
+    });
   };
 
   return {
     form,
     shopData,
     isLoading,
-    error,
-    onSubmit: form.handleSubmit(onSubmit),
-    isSubmitting: updateMutation.isPending,
     updateMutation,
+    onSubmit,
   };
 }
-

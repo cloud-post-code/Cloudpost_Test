@@ -7,10 +7,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "📊" },
-  { name: "Shop", href: "/dashboard/shop", icon: "🏪" },
   { name: "Products", href: "/dashboard/products", icon: "📦" },
   { name: "Inventory", href: "/dashboard/inventory", icon: "📋" },
   { name: "Orders", href: "/dashboard/orders", icon: "🛒" },
@@ -19,8 +19,19 @@ const navigation = [
   { name: "Account", href: "/dashboard/account", icon: "👤" },
 ];
 
+const shopNavigation = [
+  { name: "Info", href: "/dashboard/shop/info", icon: "ℹ️" },
+  { name: "Address", href: "/dashboard/shop/address", icon: "📍" },
+  { name: "Settings", href: "/dashboard/shop/settings", icon: "⚙️" },
+  { name: "Esthetic", href: "/dashboard/shop/esthetic", icon: "🎨" },
+  { name: "Shop Info", href: "/dashboard/shop/info-pages", icon: "📄" },
+  { name: "Pickup Locations", href: "/dashboard/shop/pickup", icon: "📦" },
+];
+
 export function Sidebar() {
   const pathname = usePathname();
+  const isShopSection = pathname?.startsWith("/dashboard/shop");
+  const [isShopOpen, setIsShopOpen] = useState(isShopSection);
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -28,7 +39,7 @@ export function Sidebar() {
         <h2 className="text-2xl font-bold text-gray-900">Cloudpost</h2>
         <p className="text-sm text-gray-500 mt-1">Seller Dashboard</p>
       </div>
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
           return (
@@ -47,6 +58,49 @@ export function Sidebar() {
             </Link>
           );
         })}
+        
+        {/* Shop Dropdown */}
+        <div>
+          <button
+            onClick={() => setIsShopOpen(!isShopOpen)}
+            className={cn(
+              "w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+              isShopSection
+                ? "bg-blue-50 text-blue-700"
+                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            )}
+          >
+            <div className="flex items-center">
+              <span className="mr-3 text-lg">🏪</span>
+              Shop
+            </div>
+            <span className={cn("transition-transform", isShopOpen && "rotate-180")}>
+              ▼
+            </span>
+          </button>
+          {isShopOpen && (
+            <div className="ml-4 mt-1 space-y-1">
+              {shopNavigation.map((item) => {
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center px-4 py-2 text-sm rounded-lg transition-colors",
+                      isActive
+                        ? "bg-blue-50 text-blue-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    )}
+                  >
+                    <span className="mr-2 text-sm">{item.icon}</span>
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </nav>
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center px-4 py-2">
