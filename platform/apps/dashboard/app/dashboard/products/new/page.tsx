@@ -446,34 +446,6 @@ function AddProductPageContent() {
     setSelectedOptions(selectedOptions.filter((opt) => opt.id !== id));
   };
 
-  const handleCreateCustomOption = async (optionName: string) => {
-    if (!optionName.trim()) return;
-
-    try {
-      const newOption = await createProductOption({
-        name: optionName.trim(),
-        type: 1, // Default type
-      });
-
-      // Refresh options
-      await queryClient.invalidateQueries({ queryKey: ["productOptions"] });
-
-      // Add to selected options
-      setSelectedOptions([
-        ...selectedOptions,
-        {
-          id: Date.now().toString(),
-          optionId: newOption.id,
-          optionValueIds: [],
-          searchValue: "",
-        },
-      ]);
-    } catch (error) {
-      console.error("Failed to create option:", error);
-      alert("Failed to create option");
-    }
-  };
-
   const handleOptionCreated = async (option: ProductOption) => {
     // Refresh options
     await queryClient.invalidateQueries({ queryKey: ["productOptions"] });
