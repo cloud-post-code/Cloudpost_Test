@@ -108,5 +108,18 @@ export class ProductsController {
   async getProductForClone(@Param("id") id: string) {
     return this.productsService.getProductForClone(parseInt(id));
   }
+
+  @Get("occasions")
+  @ApiOperation({ summary: "Get distinct occasions from products" })
+  async getOccasions() {
+    return this.productsService.getOccasions();
+  }
+
+  @Get("categories")
+  @ApiOperation({ summary: "Get product categories" })
+  async getProductCategories(@Query() query: any) {
+    const langId = query.langId || 1;
+    return this.productsService.getProductCategories(langId);
+  }
 }
 

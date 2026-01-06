@@ -16,6 +16,7 @@ import {
   getShippingProfiles,
   getTags,
   getProductCategories,
+  getOccasions,
   createTag,
   createProduct,
   createProductOption,
@@ -27,19 +28,6 @@ import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
 
-// Occasion options
-const OCCASION_OPTIONS = [
-  "Birthday",
-  "Anniversary",
-  "Wedding",
-  "Graduation",
-  "Valentine's Day",
-  "Mother's Day",
-  "Father's Day",
-  "Christmas",
-  "New Year",
-  "Other",
-];
 
 // Weight units
 const WEIGHT_UNITS = [
@@ -75,6 +63,9 @@ function AddProductPageContent() {
   const [tags, setTags] = useState<TagInput[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<ProductOptionSelection[]>([]);
+  const [occasionSearch, setOccasionSearch] = useState("");
+  const [occasionSuggestions, setOccasionSuggestions] = useState<string[]>([]);
+  const [showOccasionSuggestions, setShowOccasionSuggestions] = useState(false);
 
   const {
     register,
@@ -84,11 +75,12 @@ function AddProductPageContent() {
     setValue,
     reset,
     formState: { errors },
-  } = useForm<CreateProductRequest & { productName: string; description: string }>({
+  } = useForm<CreateProductRequest & { productName: string; description: string; fulfillmentType?: number }>({
     defaultValues: {
       featured: false,
       canBeCustom: false,
       weightUnit: 1,
+      fulfillmentType: 1,
     },
   });
 
@@ -120,8 +112,25 @@ function AddProductPageContent() {
     queryFn: getProductCategories,
   });
 
+  const { data: occasions = [] } = useQuery({
+    queryKey: ["occasions"],
+    queryFn: getOccasions,
+  });
+
   // Find default shipping profile
   const defaultShippingProfile = shippingProfiles.find((p) => p.isDefault);
+  
+  // Watch shipping profile to auto-set fulfillment type
+  const selectedShippingProfileId = watch("shippingProfileId");
+  const selectedShippingProfile = shippingProfiles.find((p) => p.id === selectedShippingProfileId);
+  
+  // Watch occasion field to sync with search
+  const occasionValue = watch("occasion");
+  useEffect(() => {
+    if (occasionValue && !occasionSearch) {
+      setOccasionSearch(occasionValue);
+    }
+  }, [occasionValue]);
 
   // Handle clone data from sessionStorage
   useEffect(() => {
@@ -132,7 +141,10 @@ function AddProductPageContent() {
         // Pre-fill form with clone data (excluding name and images as requested)
         if (cloneData.description) setValue("description", cloneData.description);
         if (cloneData.shortDescription) setValue("shortDescription", cloneData.shortDescription);
-        if (cloneData.occasion) setValue("occasion", cloneData.occasion);
+        if (cloneData.occasion) {
+          setValue("occasion", cloneData.occasion);
+          setOccasionSearch(cloneData.occasion);
+        }
         if (cloneData.categoryId) setValue("categoryId", cloneData.categoryIds?.[0]);
         if (cloneData.weight !== undefined) setValue("weight", cloneData.weight);
         if (cloneData.weightUnit) setValue("weightUnit", cloneData.weightUnit);
@@ -163,6 +175,36 @@ function AddProductPageContent() {
       setValue("shippingProfileId", defaultShippingProfile.id);
     }
   }, [defaultShippingProfile, setValue]);
+
+  // Auto-set fulfillment type based on shipping profile
+  useEffect(() => {
+    if (selectedShippingProfile) {
+      // Auto-set fulfillment type based on profile (default to 1 = Shipping)
+      // This should be determined by the shipping profile's fulfillment method
+      // For now, defaulting to 1 (Shipping), but this should come from the profile
+      setValue("fulfillmentType", 1);
+    }
+  }, [selectedShippingProfile, setValue]);
+
+  // Handle occasion search
+  useEffect(() => {
+    if (occasionSearch.trim()) {
+      const filtered = occasions.filter((occ) =>
+        occ.toLowerCase().includes(occasionSearch.toLowerCase())
+      );
+      setOccasionSuggestions(filtered);
+      setShowOccasionSuggestions(true);
+    } else {
+      setOccasionSuggestions([]);
+      setShowOccasionSuggestions(false);
+    }
+  }, [occasionSearch, occasions]);
+
+  const handleOccasionSelect = (occasion: string) => {
+    setValue("occasion", occasion);
+    setOccasionSearch(occasion);
+    setShowOccasionSuggestions(false);
+  };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -461,6 +503,7 @@ function AddProductPageContent() {
       weight: data.weight ? parseFloat(data.weight.toString()) : undefined,
       weightUnit: data.weightUnit,
       shippingProfileId: data.shippingProfileId || defaultShippingProfile?.id,
+      fulfillmentType: data.fulfillmentType || 1,
       featured: data.featured || false,
       canBeCustom: data.canBeCustom || false,
       customPrompt: data.canBeCustom ? data.customPrompt : undefined,
@@ -518,21 +561,45 @@ function AddProductPageContent() {
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <h2 className="text-xl font-semibold mb-4">Occasion & Category</h2>
           <div className="grid grid-cols-2 gap-4">
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Occasion
               </label>
-              <select
-                {...register("occasion")}
+              <input
+                type="text"
+                value={occasionSearch}
+                onChange={(e) => {
+                  setOccasionSearch(e.target.value);
+                  setValue("occasion", e.target.value);
+                }}
+                onFocus={() => {
+                  if (occasionSearch.trim()) {
+                    setShowOccasionSuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay hiding suggestions to allow click
+                  setTimeout(() => setShowOccasionSuggestions(false), 200);
+                }}
+                placeholder="Search or type occasion..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select occasion</option>
-                {OCCASION_OPTIONS.map((occasion) => (
-                  <option key={occasion} value={occasion}>
-                    {occasion}
-                  </option>
-                ))}
-              </select>
+              />
+              {showOccasionSuggestions && occasionSuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {occasionSuggestions.map((occasion, idx) => (
+                    <div
+                      key={idx}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleOccasionSelect(occasion);
+                      }}
+                    >
+                      {occasion}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -545,7 +612,7 @@ function AddProductPageContent() {
                 <option value="">Select category</option>
                 {productCategories.map((category) => (
                   <option key={category.id} value={category.id}>
-                    {category.name}
+                    {category.name} {category.type ? `(${category.type})` : ""}
                   </option>
                 ))}
               </select>
@@ -818,6 +885,23 @@ function AddProductPageContent() {
                 </option>
               ))}
             </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Fulfillment Type
+            </label>
+            <select
+              {...register("fulfillmentType", { valueAsNumber: true })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              disabled
+            >
+              <option value={1}>Shipping</option>
+              <option value={2}>Pickup</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500">
+              Automatically set based on shipping profile
+            </p>
           </div>
         </div>
 

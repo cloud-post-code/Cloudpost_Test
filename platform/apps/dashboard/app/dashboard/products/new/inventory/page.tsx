@@ -252,10 +252,23 @@ function InventoryPageContent() {
                         type="number"
                         step="0.01"
                         min="0"
-                        value={item.price || ""}
-                        onChange={(e) =>
-                          updateInventoryItem(index, "price", parseFloat(e.target.value) || 0)
-                        }
+                        value={item.price === 0 ? "" : item.price || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || val === null || val === undefined) {
+                            updateInventoryItem(index, "price", 0);
+                          } else {
+                            const numVal = parseFloat(val);
+                            if (!isNaN(numVal) && numVal >= 0) {
+                              updateInventoryItem(index, "price", numVal);
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === "" || parseFloat(e.target.value) < 0) {
+                            updateInventoryItem(index, "price", 0);
+                          }
+                        }}
                         required
                         className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -264,10 +277,24 @@ function InventoryPageContent() {
                       <input
                         type="number"
                         min="0"
-                        value={item.quantity || ""}
-                        onChange={(e) =>
-                          updateInventoryItem(index, "quantity", parseInt(e.target.value) || 0)
-                        }
+                        step="1"
+                        value={item.quantity === 0 ? "" : item.quantity || ""}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (val === "" || val === null || val === undefined) {
+                            updateInventoryItem(index, "quantity", 0);
+                          } else {
+                            const numVal = parseInt(val, 10);
+                            if (!isNaN(numVal) && numVal >= 0) {
+                              updateInventoryItem(index, "quantity", numVal);
+                            }
+                          }
+                        }}
+                        onBlur={(e) => {
+                          if (e.target.value === "" || parseInt(e.target.value, 10) < 0) {
+                            updateInventoryItem(index, "quantity", 0);
+                          }
+                        }}
                         required
                         className="w-32 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />

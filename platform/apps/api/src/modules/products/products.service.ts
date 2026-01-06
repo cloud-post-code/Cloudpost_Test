@@ -11,6 +11,8 @@ import {
   tags,
   tagsLang,
   productToCategory,
+  productCategories,
+  productCategoriesLang,
   sellerProducts,
   sellerProductsLang,
 } from "@cloudpost/database";
@@ -542,6 +544,58 @@ export class ProductsService {
       trackInventory: sellerProduct?.trackInventory ?? true,
       condition: sellerProductLang?.condition || "",
     };
+  }
+
+  async getOccasions(): Promise<string[]> {
+    // Get distinct occasions from products table
+    const allProducts = await this.db
+      .select({ occasion: products.occasion })
+      .from(products)
+      .where(eq(products.deleted, false));
+
+    // Extract unique, non-null occasions
+    const occasionsSet = new Set<string>();
+    allProducts.forEach((product: { occasion: string | null }) => {
+      if (product.occasion && product.occasion.trim()) {
+        occasionsSet.add(product.occasion.trim());
+      }
+    });
+
+    return Array.from(occasionsSet).sort();
+  }
+
+  async getProductCategories(langId: number = 1) {
+    // Get all active categories
+    const categoriesList = await this.db
+      .select()
+      .from(productCategories)
+      .where(eq(productCategories.active, true));
+
+    // Get language-specific names for each category
+    const categoriesWithNames = await Promise.all(
+      categoriesList.map(async (category: any) => {
+        const [categoryLang] = await this.db
+          .select()
+          .from(productCategoriesLang)
+          .where(
+            and(
+              eq(productCategoriesLang.categoryId, category.id),
+              eq(productCategoriesLang.langId, langId)
+            )
+          )
+          .limit(1);
+
+        return {
+          id: category.id,
+          identifier: category.identifier,
+          name: categoryLang?.name || "",
+          parentId: category.parentId,
+          type: category.type || undefined, // Add type if it exists in schema
+        };
+      })
+    );
+
+    return categoriesWithNames.filter((cat) => cat.name);
   }
 }
 

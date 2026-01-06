@@ -45,6 +45,7 @@ export interface ProductCategory {
   identifier: string;
   name: string;
   parentId?: number;
+  type?: string;
 }
 
 export interface CreateProductRequest {
@@ -58,6 +59,7 @@ export interface CreateProductRequest {
   weight?: number;
   weightUnit?: number;
   shippingProfileId?: number;
+  fulfillmentType?: number;
   featured?: boolean;
   canBeCustom?: boolean;
   customPrompt?: string;
@@ -196,6 +198,25 @@ export async function getProductCategories(): Promise<ProductCategory[]> {
 
   if (!response.ok) {
     throw new Error("Failed to fetch product categories");
+  }
+
+  return response.json();
+}
+
+export interface Occasion {
+  value: string;
+}
+
+export async function getOccasions(): Promise<string[]> {
+  const response = await fetch(`${API_BASE_URL}/products/occasions`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch occasions");
   }
 
   return response.json();
