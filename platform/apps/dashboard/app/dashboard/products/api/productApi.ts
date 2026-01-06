@@ -68,7 +68,7 @@ export interface CreateProductRequest {
   }[];
 }
 
-export interface InventoryItem {
+export interface CreateInventoryItem {
   optionCombination: {
     optionId: number;
     optionValueId: number;
@@ -80,7 +80,7 @@ export interface InventoryItem {
 
 export interface CreateInventoryRequest {
   productId: number;
-  items: InventoryItem[];
+  items: CreateInventoryItem[];
 }
 
 export async function getProductOptions(): Promise<ProductOption[]> {

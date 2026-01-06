@@ -12,6 +12,7 @@ import {
   getProductOptions,
   createInventory,
   CreateInventoryRequest,
+  CreateInventoryItem,
   ProductOption,
 } from "../../api/productApi";
 
