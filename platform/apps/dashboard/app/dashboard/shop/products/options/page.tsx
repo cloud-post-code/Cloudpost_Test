@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { getProductOptions, ProductOption } from "../../../products/api/productApi";
+import { getProductOptions } from "../../../products/api/productApi";
 import { SidePanel } from "@/components/side-panel";
 import { ProductOptionForm } from "./components/ProductOptionForm";
 import { getCurrentUser } from "@/lib/auth";
@@ -25,7 +25,7 @@ function ProductOptionsPageContent() {
 
   // Filter options by current user (if user is available)
   const userOptions = currentUser
-    ? productOptions.filter((opt) => {
+    ? productOptions.filter((_opt) => {
         // Note: The API should filter by user, but we can also filter here
         // This assumes the option has a sellerId property
         return true; // For now, show all options until backend filtering is implemented
@@ -136,12 +136,6 @@ function ProductOptionsPageContent() {
                                 className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
                               >
                                 {value.name}
-                                {value.colorCode && (
-                                  <span
-                                    className="ml-2 w-3 h-3 rounded-full border border-gray-300"
-                                    style={{ backgroundColor: value.colorCode }}
-                                  />
-                                )}
                               </span>
                             ))}
                           </div>

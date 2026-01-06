@@ -22,7 +22,6 @@ import {
   createProductOption,
   createOptionValue,
   CreateProductRequest,
-  ProductOption,
 } from "../api/productApi";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +72,6 @@ function AddProductPageContent() {
     control,
     watch,
     setValue,
-    reset,
     formState: { errors },
   } = useForm<CreateProductRequest & { productName: string; description: string; fulfillmentType?: number }>({
     defaultValues: {
@@ -130,7 +128,7 @@ function AddProductPageContent() {
     if (occasionValue && !occasionSearch) {
       setOccasionSearch(occasionValue);
     }
-  }, [occasionValue]);
+  }, [occasionValue, occasionSearch]);
 
   // Handle clone data from sessionStorage
   useEffect(() => {
@@ -706,7 +704,7 @@ function AddProductPageContent() {
             {/* Table Rows */}
             {selectedOptions.length === 0 ? (
               <div className="p-4 text-center text-gray-500 text-sm">
-                No options added. Click "Add Custom Options" to create a new option or add a row below.
+                No options added. Click &quot;Add Custom Options&quot; to create a new option or add a row below.
               </div>
             ) : (
               selectedOptions.map((option) => {

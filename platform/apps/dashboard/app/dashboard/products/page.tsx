@@ -8,15 +8,8 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import {
-  getProductOptions,
-  createProductOption,
-  createOptionValue,
-  CreateOptionRequest,
-  ProductOption,
-} from "./api/productApi";
+import { getProductOptions } from "./api/productApi";
 import { ProductOptionForm } from "../shop/products/options/components/ProductOptionForm";
-import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
 
@@ -24,7 +17,7 @@ function ProductsPageContent() {
   const [showOptionForm, setShowOptionForm] = useState(false);
   const queryClientInstance = useQueryClient();
 
-  const { data: productOptions = [], isLoading } = useQuery({
+  useQuery({
     queryKey: ["productOptions"],
     queryFn: getProductOptions,
   });

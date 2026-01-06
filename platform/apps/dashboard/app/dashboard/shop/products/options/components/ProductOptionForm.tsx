@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils";
 interface OptionValue {
   id: string;
   name: string;
-  colorCode?: string;
 }
 
 interface ProductOptionFormData {
@@ -31,7 +30,7 @@ interface ProductOptionFormProps {
 export function ProductOptionForm({
   onSuccess,
   onCancel,
-  userId,
+  userId: _userId,
 }: ProductOptionFormProps) {
   const queryClient = useQueryClient();
   const [optionValues, setOptionValues] = useState<OptionValue[]>([
@@ -59,7 +58,6 @@ export function ProductOptionForm({
           createOptionValue({
             optionId: option.id,
             name: value.name,
-            colorCode: value.colorCode,
           })
         );
 
@@ -85,9 +83,9 @@ export function ProductOptionForm({
     }
   };
 
-  const handleValueChange = (id: string, field: "name" | "colorCode", value: string) => {
+  const handleValueChange = (id: string, value: string) => {
     setOptionValues(
-      optionValues.map((v) => (v.id === id ? { ...v, [field]: value } : v))
+      optionValues.map((v) => (v.id === id ? { ...v, name: value } : v))
     );
   };
 
@@ -175,24 +173,15 @@ export function ProductOptionForm({
               key={value.id}
               className="flex items-start gap-3 p-3 border border-gray-200 rounded-md"
             >
-              <div className="flex-1 space-y-2">
+              <div className="flex-1">
                 <input
                   type="text"
                   value={value.name}
                   onChange={(e) =>
-                    handleValueChange(value.id, "name", e.target.value)
+                    handleValueChange(value.id, e.target.value)
                   }
                   placeholder={`Value ${index + 1}`}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <input
-                  type="text"
-                  value={value.colorCode || ""}
-                  onChange={(e) =>
-                    handleValueChange(value.id, "colorCode", e.target.value)
-                  }
-                  placeholder="Color code (optional, e.g., #FF0000)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 />
               </div>
               {optionValues.length > 1 && (

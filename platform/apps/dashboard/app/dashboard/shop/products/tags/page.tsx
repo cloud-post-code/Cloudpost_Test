@@ -11,11 +11,9 @@ import {
   getProductsWithTags,
   updateProductTags,
   getTags,
-  createTag,
   ProductWithTags,
   Tag,
 } from "../../../products/api/productApi";
-import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
 
@@ -251,7 +249,7 @@ function TagsPageContent() {
         <div>
           <h1 className="text-3xl font-bold">Product Tags</h1>
           <p className="text-gray-500 mt-1">
-            Manage tags for all your products. Click "Edit Tags" to add or remove tags.
+            Manage tags for all your products. Click &quot;Edit Tags&quot; to add or remove tags.
           </p>
         </div>
       </div>
