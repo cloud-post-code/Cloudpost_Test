@@ -264,6 +264,18 @@ export interface InventoryItem {
   }[];
 }
 
+export interface ProductWithTags {
+  id: number;
+  identifier: string;
+  name: string;
+  tags: Tag[];
+}
+
+export interface ProductsResponse {
+  data: ProductWithTags[];
+  total: number;
+}
+
 export async function getInventories(): Promise<InventoryItem[]> {
   const response = await fetch(`${API_BASE_URL}/products/inventory`, {
     method: "GET",
@@ -277,5 +289,201 @@ export async function getInventories(): Promise<InventoryItem[]> {
   }
 
   return response.json();
+}
+
+export async function getProductsWithTags(): Promise<ProductsResponse> {
+  const response = await fetch(`${API_BASE_URL}/products`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
+  }
+
+  return response.json();
+}
+
+export async function updateProductTags(
+  productId: number,
+  tags: string[]
+): Promise<{ success: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/tags`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ tags }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to update product tags");
+  }
+
+  return response.json();
+}
+
+export interface ProductListItem {
+  id: number;
+  identifier: string;
+  name: string;
+  active: boolean;
+  featured: boolean;
+  sku?: string;
+  price?: number;
+  stock?: number;
+  tags: Tag[];
+}
+
+export interface ProductListResponse {
+  data: ProductListItem[];
+  total: number;
+}
+
+export async function getProductList(): Promise<ProductListResponse> {
+  const response = await fetch(`${API_BASE_URL}/products`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch products");
+  }
+
+  return response.json();
+}
+
+export async function activateProduct(productId: number): Promise<{ success: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/activate`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to activate product");
+  }
+
+  return response.json();
+}
+
+export async function deactivateProduct(productId: number): Promise<{ success: boolean }> {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/deactivate`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to deactivate product");
+  }
+
+  return response.json();
+}
+
+export async function bulkActivateProducts(productIds: number[]): Promise<{ success: boolean; count: number }> {
+  const response = await fetch(`${API_BASE_URL}/products/bulk-activate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ productIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to activate products");
+  }
+
+  return response.json();
+}
+
+export async function bulkDeactivateProducts(productIds: number[]): Promise<{ success: boolean; count: number }> {
+  const response = await fetch(`${API_BASE_URL}/products/bulk-deactivate`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ productIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to deactivate products");
+  }
+
+  return response.json();
+}
+
+export async function bulkDeleteProducts(productIds: number[]): Promise<{ success: boolean; count: number }> {
+  const response = await fetch(`${API_BASE_URL}/products/bulk-delete`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ productIds }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to delete products");
+  }
+
+  return response.json();
+}
+
+export interface ProductCloneData {
+  description?: string;
+  shortDescription?: string;
+  occasion?: string;
+  categoryIds?: number[];
+  tags?: string[];
+  weight?: number;
+  weightUnit?: number;
+  canBeCustom?: boolean;
+  customPrompt?: string;
+  featured?: boolean;
+  price?: number;
+  costPrice?: number;
+  stock?: number;
+  minOrderQty?: number;
+  trackInventory?: boolean;
+  condition?: string;
+}
+
+export async function getProductForClone(productId: number): Promise<ProductCloneData> {
+  const response = await fetch(`${API_BASE_URL}/products/${productId}/clone`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to get product data for cloning");
+  }
+
+  return response.json();
+}
+
+export async function getProductInventory(productId: number): Promise<InventoryItem[]> {
+  // Get all inventory and filter by productId on the frontend
+  // In a real implementation, the backend should support filtering
+  const response = await fetch(`${API_BASE_URL}/products/inventory`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch product inventory");
+  }
+
+  const allInventory: InventoryItem[] = await response.json();
+  return allInventory.filter((item) => item.productId === productId);
 }
 

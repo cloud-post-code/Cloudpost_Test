@@ -10,6 +10,8 @@ import { useForm, Controller } from "react-hook-form";
 import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { getShop, updateShop, ShopData, UpdateShopRequest } from "./api/shopApi";
 import { cn } from "@/lib/utils";
+import { PhoneInput } from "@/components/phone-input";
+import { ImageCropper } from "./components/ImageCropper";
 
 // Create a query client instance
 const queryClient = new QueryClient();
@@ -128,6 +130,8 @@ function ShopPageContent() {
     info: true,
     pickup: true,
   });
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const [showBannerCropper, setShowBannerCropper] = useState(false);
 
   const toggleSection = (section: string) => {
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
@@ -156,13 +160,14 @@ function ShopPageContent() {
     handleSubmit,
     control,
     watch,
+    setValue,
     formState: { errors },
     reset,
   } = useForm<UpdateShopRequest>({
     defaultValues: {
       name: "",
       url: "",
-      phoneDcode: "",
+      phoneDcode: "+1",
       phone: "",
       returnAddressSame: true,
       vacationStatus: false,
@@ -177,7 +182,7 @@ function ShopPageContent() {
       reset({
         name: shopData.name || "",
         url: shopData.url || "",
-        phoneDcode: shopData.phoneDcode || "",
+        phoneDcode: shopData.phoneDcode || "+1",
         phone: shopData.phone || "",
         countryId: shopData.countryId,
         stateId: shopData.stateId,
@@ -242,23 +247,18 @@ function ShopPageContent() {
             errors={errors}
             placeholder="shop-url"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput
-              label="Phone Country Code"
-              name="phoneDcode"
-              register={register}
-              errors={errors}
-              placeholder="+1"
-            />
-            <FormInput
-              label="Phone Number"
-              name="phone"
-              register={register}
-              errors={errors}
-              type="tel"
-              placeholder="1234567890"
-            />
-          </div>
+          <PhoneInput
+            label="Phone Number"
+            countryCodeName="phoneDcode"
+            phoneName="phone"
+            countryCodeRegister={register("phoneDcode", { value: watch("phoneDcode") || "+1" })}
+            phoneRegister={register("phone", { value: watch("phone") || "" })}
+            countryCodeError={errors.phoneDcode}
+            phoneError={errors.phone}
+            countryCodeValue={watch("phoneDcode") || "+1"}
+            phoneValue={watch("phone") || ""}
+            setValue={setValue}
+          />
         </Section>
 
         {/* Section 2: Address */}
@@ -420,16 +420,25 @@ function ShopPageContent() {
               accept="image/*"
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
               onChange={(e) => {
-                // TODO: Handle file upload
                 const file = e.target.files?.[0];
                 if (file) {
-                  // For now, just update the form value with a placeholder
-                  // In production, upload to storage and update with URL
+                  const reader = new FileReader();
+                  reader.onloadend = () => {
+                    setBannerImage(reader.result as string);
+                    setShowBannerCropper(true);
+                  };
+                  reader.readAsDataURL(file);
                 }
               }}
             />
             {watch("banner") && (
-              <p className="mt-2 text-sm text-gray-500">Current banner: {watch("banner")}</p>
+              <div className="mt-4">
+                <img
+                  src={watch("banner")}
+                  alt="Banner preview"
+                  className="w-full h-48 object-cover rounded-md"
+                />
+              </div>
             )}
           </div>
         </Section>
@@ -602,6 +611,23 @@ function ShopPageContent() {
           </button>
         </div>
       </form>
+
+      {showBannerCropper && bannerImage && (
+        <ImageCropper
+          image={bannerImage}
+          aspect={3} // 3:1 aspect ratio for banners
+          title="Crop Banner (3:1)"
+          onCropComplete={(croppedImage) => {
+            setValue("banner", croppedImage);
+            setShowBannerCropper(false);
+            setBannerImage(null);
+          }}
+          onCancel={() => {
+            setShowBannerCropper(false);
+            setBannerImage(null);
+          }}
+        />
+      )}
     </div>
   );
 }

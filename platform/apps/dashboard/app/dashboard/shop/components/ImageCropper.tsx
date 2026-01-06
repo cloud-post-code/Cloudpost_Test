@@ -1,5 +1,5 @@
 /**
- * Image Cropper Component with 1:1 aspect ratio
+ * Image Cropper Component with configurable aspect ratio
  */
 
 "use client";
@@ -11,9 +11,17 @@ interface ImageCropperProps {
   image: string | null;
   onCropComplete: (croppedImage: string) => void;
   onCancel: () => void;
+  aspect?: number; // Aspect ratio (width/height), default is 1 (square)
+  title?: string; // Title for the cropper modal
 }
 
-export function ImageCropper({ image, onCropComplete, onCancel }: ImageCropperProps) {
+export function ImageCropper({ 
+  image, 
+  onCropComplete, 
+  onCancel, 
+  aspect = 1,
+  title 
+}: ImageCropperProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
@@ -96,16 +104,20 @@ export function ImageCropper({ image, onCropComplete, onCancel }: ImageCropperPr
 
   if (!image) return null;
 
+  const aspectRatioText = aspect === 1 ? "1:1" : aspect > 1 ? `${aspect}:1` : `1:${1/aspect}`;
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg p-6 max-w-2xl w-full">
-        <h3 className="text-lg font-semibold mb-4">Crop Image (1:1)</h3>
+        <h3 className="text-lg font-semibold mb-4">
+          {title || `Crop Image (${aspectRatioText})`}
+        </h3>
         <div className="relative w-full h-96 mb-4">
           <Cropper
             image={image}
             crop={crop}
             zoom={zoom}
-            aspect={1}
+            aspect={aspect}
             onCropChange={onCropChange}
             onZoomChange={onZoomChange}
             onCropComplete={onCropCompleteCallback}

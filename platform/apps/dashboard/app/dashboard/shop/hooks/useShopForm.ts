@@ -31,7 +31,7 @@ export function useShopForm() {
     defaultValues: {
       name: "",
       url: "",
-      phoneDcode: "",
+      phoneDcode: "+1",
       phone: "",
       returnAddressSame: true,
       vacationStatus: false,
@@ -46,7 +46,7 @@ export function useShopForm() {
       form.reset({
         name: shopData.name || "",
         url: shopData.url || "",
-        phoneDcode: shopData.phoneDcode || "",
+        phoneDcode: shopData.phoneDcode || "+1",
         phone: shopData.phone || "",
         countryId: shopData.countryId,
         stateId: shopData.stateId,

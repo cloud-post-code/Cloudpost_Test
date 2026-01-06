@@ -7,6 +7,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useShopForm } from "../hooks/useShopForm";
 import { cn } from "@/lib/utils";
+import { PhoneInput } from "@/components/phone-input";
 
 const queryClient = new QueryClient();
 
@@ -50,7 +51,7 @@ function FormInput({
 
 function ShopInfoPageContent() {
   const { form, isLoading, onSubmit } = useShopForm();
-  const { register, handleSubmit, formState: { errors } } = form;
+  const { register, handleSubmit, watch, setValue, formState: { errors } } = form;
 
   if (isLoading) {
     return (
@@ -81,23 +82,18 @@ function ShopInfoPageContent() {
             errors={errors}
             placeholder="shop-url"
           />
-          <div className="grid grid-cols-2 gap-4">
-            <FormInput
-              label="Phone Country Code"
-              name="phoneDcode"
-              register={register}
-              errors={errors}
-              placeholder="+1"
-            />
-            <FormInput
-              label="Phone Number"
-              name="phone"
-              register={register}
-              errors={errors}
-              type="tel"
-              placeholder="1234567890"
-            />
-          </div>
+          <PhoneInput
+            label="Phone Number"
+            countryCodeName="phoneDcode"
+            phoneName="phone"
+            countryCodeRegister={register("phoneDcode", { value: watch("phoneDcode") || "+1" })}
+            phoneRegister={register("phone", { value: watch("phone") || "" })}
+            countryCodeError={errors.phoneDcode}
+            phoneError={errors.phone}
+            countryCodeValue={watch("phoneDcode") || "+1"}
+            phoneValue={watch("phone") || ""}
+            setValue={setValue}
+          />
         </div>
 
         <div className="flex justify-end space-x-4 pt-4">

@@ -16,6 +16,8 @@ function ShopEstheticPageContent() {
   const { handleSubmit, watch, setValue } = form;
   const [logoImage, setLogoImage] = useState<string | null>(null);
   const [showLogoCropper, setShowLogoCropper] = useState(false);
+  const [bannerImage, setBannerImage] = useState<string | null>(null);
+  const [showBannerCropper, setShowBannerCropper] = useState(false);
 
   const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,11 +36,17 @@ function ShopEstheticPageContent() {
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        // Banner doesn't need cropping, just set it directly
-        setValue("banner", reader.result as string);
+        setBannerImage(reader.result as string);
+        setShowBannerCropper(true);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleBannerCropComplete = (croppedImage: string) => {
+    setValue("banner", croppedImage);
+    setShowBannerCropper(false);
+    setBannerImage(null);
   };
 
   const handleLogoCropComplete = (croppedImage: string) => {
@@ -113,10 +121,25 @@ function ShopEstheticPageContent() {
       {showLogoCropper && logoImage && (
         <ImageCropper
           image={logoImage}
+          aspect={1}
+          title="Crop Logo (1:1)"
           onCropComplete={handleLogoCropComplete}
           onCancel={() => {
             setShowLogoCropper(false);
             setLogoImage(null);
+          }}
+        />
+      )}
+
+      {showBannerCropper && bannerImage && (
+        <ImageCropper
+          image={bannerImage}
+          aspect={3}
+          title="Crop Banner (3:1)"
+          onCropComplete={handleBannerCropComplete}
+          onCancel={() => {
+            setShowBannerCropper(false);
+            setBannerImage(null);
           }}
         />
       )}

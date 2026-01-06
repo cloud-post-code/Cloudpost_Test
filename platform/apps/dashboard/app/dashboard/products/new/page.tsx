@@ -82,6 +82,7 @@ function AddProductPageContent() {
     control,
     watch,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<CreateProductRequest & { productName: string; description: string }>({
     defaultValues: {
@@ -121,6 +122,41 @@ function AddProductPageContent() {
 
   // Find default shipping profile
   const defaultShippingProfile = shippingProfiles.find((p) => p.isDefault);
+
+  // Handle clone data from sessionStorage
+  useEffect(() => {
+    const cloneDataStr = sessionStorage.getItem("productCloneData");
+    if (cloneDataStr) {
+      try {
+        const cloneData = JSON.parse(cloneDataStr);
+        // Pre-fill form with clone data (excluding name and images as requested)
+        if (cloneData.description) setValue("description", cloneData.description);
+        if (cloneData.shortDescription) setValue("shortDescription", cloneData.shortDescription);
+        if (cloneData.occasion) setValue("occasion", cloneData.occasion);
+        if (cloneData.categoryId) setValue("categoryId", cloneData.categoryIds?.[0]);
+        if (cloneData.weight !== undefined) setValue("weight", cloneData.weight);
+        if (cloneData.weightUnit) setValue("weightUnit", cloneData.weightUnit);
+        if (cloneData.canBeCustom !== undefined) setValue("canBeCustom", cloneData.canBeCustom);
+        if (cloneData.customPrompt) setValue("customPrompt", cloneData.customPrompt);
+        if (cloneData.featured !== undefined) setValue("featured", cloneData.featured);
+        
+        // Set tags
+        if (cloneData.tags && Array.isArray(cloneData.tags)) {
+          const tagInputs: TagInput[] = cloneData.tags.map((tagName: string, index: number) => ({
+            id: `clone-${index}`,
+            value: tagName,
+          }));
+          setTags(tagInputs);
+        }
+        
+        // Clear clone data from sessionStorage
+        sessionStorage.removeItem("productCloneData");
+      } catch (error) {
+        console.error("Failed to parse clone data:", error);
+        sessionStorage.removeItem("productCloneData");
+      }
+    }
+  }, [setValue]);
 
   useEffect(() => {
     if (defaultShippingProfile) {
