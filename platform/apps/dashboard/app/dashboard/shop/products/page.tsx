@@ -18,7 +18,7 @@ import {
   getProductInventory,
   ProductListItem,
   InventoryItem,
-} from "../../../api/productApi";
+} from "../../products/api/productApi";
 import { cn } from "@/lib/utils";
 import { SidePanel } from "@/components/side-panel";
 

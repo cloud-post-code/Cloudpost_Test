@@ -7,7 +7,7 @@
 
 import { useState } from "react";
 import { useQuery, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { getProductOptions, ProductOption } from "../../../api/productApi";
+import { getProductOptions, ProductOption } from "../../../products/api/productApi";
 import { SidePanel } from "@/components/side-panel";
 import { ProductOptionForm } from "./components/ProductOptionForm";
 import { getCurrentUser } from "@/lib/auth";

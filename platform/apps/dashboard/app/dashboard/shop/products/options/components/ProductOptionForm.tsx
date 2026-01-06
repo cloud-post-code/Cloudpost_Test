@@ -8,7 +8,7 @@ import {
   createOptionValue,
   CreateOptionRequest,
   ProductOption,
-} from "../../../api/productApi";
+} from "../../../../products/api/productApi";
 import { cn } from "@/lib/utils";
 
 interface OptionValue {

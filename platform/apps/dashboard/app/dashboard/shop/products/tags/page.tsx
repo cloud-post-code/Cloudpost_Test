@@ -14,7 +14,7 @@ import {
   createTag,
   ProductWithTags,
   Tag,
-} from "../../../api/productApi";
+} from "../../../products/api/productApi";
 import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
