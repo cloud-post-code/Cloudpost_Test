@@ -11,17 +11,14 @@ import { useState, useEffect } from "react";
 
 const navigation = [
   { name: "Orders", href: "/dashboard/orders", icon: "🛒" },
-  { name: "Shipping", href: "/dashboard/shipping", icon: "🚚" },
   { name: "Wallet", href: "/dashboard/wallet", icon: "💰" },
   { name: "Account", href: "/dashboard/account", icon: "👤" },
 ];
 
 const shopNavigation = [
-  { name: "Info", href: "/dashboard/shop/info", icon: "ℹ️" },
-  { name: "Address", href: "/dashboard/shop/address", icon: "📍" },
-  { name: "Settings", href: "/dashboard/shop/settings", icon: "⚙️" },
-  { name: "Esthetic", href: "/dashboard/shop/esthetic", icon: "🎨" },
-  { name: "Shop Info", href: "/dashboard/shop/info-pages", icon: "📄" },
+  { name: "Info, Address & Settings", href: "/dashboard/shop/info", icon: "ℹ️" },
+  { name: "Esthetic & Shop Info", href: "/dashboard/shop/esthetic", icon: "🎨" },
+  { name: "Shipping", href: "/dashboard/shipping", icon: "🚚" },
   { name: "Pickup Locations", href: "/dashboard/shop/pickup", icon: "📦" },
 ];
 
@@ -34,7 +31,7 @@ const productsNavigation = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const isShopSection = pathname?.startsWith("/dashboard/shop") && !pathname?.startsWith("/dashboard/shop/products");
+  const isShopSection = (pathname?.startsWith("/dashboard/shop") && !pathname?.startsWith("/dashboard/shop/products")) || pathname?.startsWith("/dashboard/shipping");
   
   // Check if any product navigation item is active
   const isProductNavActive = productsNavigation.some(
@@ -51,6 +48,13 @@ export function Sidebar() {
       setIsProductsOpen(true);
     }
   }, [isProductNavActive]);
+
+  // Auto-open shop dropdown if any shop page is active
+  useEffect(() => {
+    if (isShopSection) {
+      setIsShopOpen(true);
+    }
+  }, [isShopSection]);
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -95,7 +99,7 @@ export function Sidebar() {
           {isShopOpen && (
             <div className="ml-4 mt-1 space-y-1">
               {shopNavigation.map((item) => {
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 return (
                   <Link
                     key={item.name}
