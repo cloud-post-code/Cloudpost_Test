@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import { UseFormRegisterReturn, FieldError, UseFormSetValue } from "react-hook-form";
-import { parsePhoneNumber, AsYouType, CountryCode } from "libphonenumber-js";
+import { AsYouType, CountryCode } from "libphonenumber-js";
 import { cn } from "@/lib/utils";
 
 // Country codes list - starting with +1 (US/Canada) and including common codes
