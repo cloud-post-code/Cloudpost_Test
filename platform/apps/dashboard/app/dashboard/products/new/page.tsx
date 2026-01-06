@@ -129,8 +129,40 @@ function AddProductPageContent() {
   }, [defaultShippingProfile, setValue]);
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    // If multiple files selected, skip cropping and add them directly
+    if (files.length > 1) {
+      const fileArray = Array.from(files);
+      const newImages: ProductImage[] = [];
+      let loadedCount = 0;
+      const baseId = Date.now();
+
+      fileArray.forEach((file, index) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const newImage: ProductImage = {
+            id: `${baseId}-${index}`,
+            url: reader.result as string,
+          };
+          newImages.push(newImage);
+          loadedCount++;
+
+          // When all files are loaded, add them all at once
+          if (loadedCount === fileArray.length) {
+            setProductImages((prev) => {
+              const updated = [...prev, ...newImages];
+              setValue("images", updated.map((img) => img.url));
+              return updated;
+            });
+          }
+        };
+        reader.readAsDataURL(file);
+      });
+    } else {
+      // Single file - show cropper
+      const file = files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageFile(reader.result as string);
@@ -139,6 +171,9 @@ function AddProductPageContent() {
       };
       reader.readAsDataURL(file);
     }
+
+    // Reset input so same file can be selected again
+    e.target.value = "";
   };
 
   const handleImageCropComplete = (croppedImage: string) => {
@@ -470,14 +505,18 @@ function AddProductPageContent() {
           <h2 className="text-xl font-semibold mb-4">Product Images</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Upload Image (1:1)
+              Upload Image(s) (1:1 when cropping)
             </label>
             <input
               type="file"
               accept="image/*"
+              multiple
               onChange={handleImageFileChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
+            <p className="mt-1 text-xs text-gray-500">
+              Select multiple images to upload without cropping, or select one image to crop it.
+            </p>
           </div>
           
           {productImages.length > 0 && (
