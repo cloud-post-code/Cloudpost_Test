@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { useQuery, useMutation, QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { ImageCropper } from "../../shop/components/ImageCropper";
 import {
@@ -18,7 +18,10 @@ import {
   getProductCategories,
   createTag,
   createProduct,
+  createProductOption,
+  createOptionValue,
   CreateProductRequest,
+  ProductOption,
 } from "../api/productApi";
 import { cn } from "@/lib/utils";
 
@@ -47,8 +50,10 @@ const WEIGHT_UNITS = [
 ];
 
 interface ProductOptionSelection {
+  id: string;
   optionId: number;
   optionValueIds: number[];
+  searchValue: string;
 }
 
 interface TagInput {
@@ -192,33 +197,129 @@ function AddProductPageContent() {
     setTags(tags.filter((tag) => tag.id !== id));
   };
 
+  const queryClient = useQueryClient();
+
   const handleAddProductOption = () => {
     setSelectedOptions([
       ...selectedOptions,
       {
+        id: Date.now().toString(),
         optionId: 0,
         optionValueIds: [],
+        searchValue: "",
       },
     ]);
   };
 
-  const handleUpdateProductOption = (index: number, optionId: number) => {
-    const updated = [...selectedOptions];
-    updated[index] = {
-      optionId,
-      optionValueIds: [],
-    };
+  const handleUpdateProductOption = (id: string, optionId: number) => {
+    const updated = selectedOptions.map((opt) =>
+      opt.id === id ? { ...opt, optionId, optionValueIds: [] } : opt
+    );
     setSelectedOptions(updated);
   };
 
-  const handleUpdateOptionValues = (index: number, optionValueIds: number[]) => {
-    const updated = [...selectedOptions];
-    updated[index].optionValueIds = optionValueIds;
+  const handleUpdateOptionValueSearch = (id: string, searchValue: string) => {
+    const updated = selectedOptions.map((opt) =>
+      opt.id === id ? { ...opt, searchValue } : opt
+    );
     setSelectedOptions(updated);
   };
 
-  const handleRemoveProductOption = (index: number) => {
-    setSelectedOptions(selectedOptions.filter((_, i) => i !== index));
+  const handleAddOptionValue = async (id: string, valueName: string) => {
+    const option = selectedOptions.find((opt) => opt.id === id);
+    if (!option || !option.optionId || !valueName.trim()) return;
+
+    const selectedOption = productOptions.find((o) => o.id === option.optionId);
+    if (!selectedOption) return;
+
+    // Check if value already exists
+    const existingValue = selectedOption.values.find(
+      (v) => v.name.toLowerCase() === valueName.trim().toLowerCase()
+    );
+
+    if (existingValue) {
+      // Add existing value
+      const updated = selectedOptions.map((opt) =>
+        opt.id === id
+          ? {
+              ...opt,
+              optionValueIds: [...opt.optionValueIds, existingValue.id],
+              searchValue: "",
+            }
+          : opt
+      );
+      setSelectedOptions(updated);
+    } else {
+      // Create new value
+      try {
+        const newValue = await createOptionValue({
+          optionId: option.optionId,
+          name: valueName.trim(),
+        });
+        
+        // Refresh options to get the new value
+        await queryClient.invalidateQueries({ queryKey: ["productOptions"] });
+        
+        // Add new value to selection
+        const updated = selectedOptions.map((opt) =>
+          opt.id === id
+            ? {
+                ...opt,
+                optionValueIds: [...opt.optionValueIds, newValue.id],
+                searchValue: "",
+              }
+            : opt
+        );
+        setSelectedOptions(updated);
+      } catch (error) {
+        console.error("Failed to create option value:", error);
+        alert("Failed to create option value");
+      }
+    }
+  };
+
+  const handleRemoveOptionValue = (id: string, valueId: number) => {
+    const updated = selectedOptions.map((opt) =>
+      opt.id === id
+        ? {
+            ...opt,
+            optionValueIds: opt.optionValueIds.filter((vid) => vid !== valueId),
+          }
+        : opt
+    );
+    setSelectedOptions(updated);
+  };
+
+  const handleRemoveProductOption = (id: string) => {
+    setSelectedOptions(selectedOptions.filter((opt) => opt.id !== id));
+  };
+
+  const handleCreateCustomOption = async (optionName: string) => {
+    if (!optionName.trim()) return;
+
+    try {
+      const newOption = await createProductOption({
+        name: optionName.trim(),
+        type: 1, // Default type
+      });
+
+      // Refresh options
+      await queryClient.invalidateQueries({ queryKey: ["productOptions"] });
+
+      // Add to selected options
+      setSelectedOptions([
+        ...selectedOptions,
+        {
+          id: Date.now().toString(),
+          optionId: newOption.id,
+          optionValueIds: [],
+          searchValue: "",
+        },
+      ]);
+    } catch (error) {
+      console.error("Failed to create option:", error);
+      alert("Failed to create option");
+    }
   };
 
   const createProductMutation = useMutation({
@@ -412,6 +513,155 @@ function AddProductPageContent() {
           )}
         </div>
 
+        {/* Product Options */}
+        <div className="bg-white rounded-lg shadow p-6 space-y-4">
+          <div className="flex justify-end mb-4">
+            <button
+              type="button"
+              onClick={() => {
+                const optionName = prompt("Enter option name:");
+                if (optionName) {
+                  handleCreateCustomOption(optionName);
+                }
+              }}
+              className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+            >
+              Add Custom Options
+            </button>
+          </div>
+
+          <div className="border border-gray-200 rounded-md overflow-hidden">
+            {/* Table Header */}
+            <div className="bg-gray-100 grid grid-cols-12 gap-4 p-3 border-b border-gray-200">
+              <div className="col-span-4">
+                <span className="text-sm font-medium text-gray-700">Option Title</span>
+              </div>
+              <div className="col-span-6">
+                <span className="text-sm font-medium text-gray-700">Option Value</span>
+              </div>
+              <div className="col-span-2 text-center">
+                <span className="text-sm font-medium text-gray-700">Add Option Type</span>
+              </div>
+            </div>
+
+            {/* Table Rows */}
+            {selectedOptions.length === 0 ? (
+              <div className="p-4 text-center text-gray-500 text-sm">
+                No options added. Click "Add Custom Options" to create a new option or add a row below.
+              </div>
+            ) : (
+              selectedOptions.map((option) => {
+                const selectedOption = productOptions.find((o) => o.id === option.optionId);
+                const filteredValues = selectedOption
+                  ? selectedOption.values.filter((v) =>
+                      v.name.toLowerCase().includes(option.searchValue.toLowerCase())
+                    )
+                  : [];
+
+                return (
+                  <div key={option.id} className="grid grid-cols-12 gap-4 p-3 border-b border-gray-200 last:border-b-0">
+                    <div className="col-span-4">
+                      <select
+                        value={option.optionId || ""}
+                        onChange={(e) => handleUpdateProductOption(option.id, parseInt(e.target.value))}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      >
+                        <option value="">Select option</option>
+                        {productOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="col-span-6">
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          value={option.searchValue}
+                          onChange={(e) => handleUpdateOptionValueSearch(option.id, e.target.value)}
+                          onKeyPress={(e) => {
+                            if (e.key === "Enter" && option.searchValue.trim()) {
+                              e.preventDefault();
+                              handleAddOptionValue(option.id, option.searchValue);
+                            }
+                          }}
+                          placeholder="Type to search"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        />
+                        {option.searchValue && filteredValues.length > 0 && (
+                          <div className="border border-gray-200 rounded-md max-h-40 overflow-y-auto">
+                            {filteredValues.map((value) => (
+                              <div
+                                key={value.id}
+                                className="px-3 py-2 hover:bg-gray-50 cursor-pointer text-sm"
+                                onClick={() => handleAddOptionValue(option.id, value.name)}
+                              >
+                                {value.name}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {selectedOption && option.optionValueIds.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {option.optionValueIds.map((valueId) => {
+                              const value = selectedOption.values.find((v) => v.id === valueId);
+                              return value ? (
+                                <span
+                                  key={valueId}
+                                  className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs"
+                                >
+                                  {value.name}
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRemoveOptionValue(option.id, valueId)}
+                                    className="ml-1 text-blue-600 hover:text-blue-800"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ) : null;
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="col-span-2 flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handleAddProductOption}
+                        className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 hover:text-gray-800"
+                        title="Add new row"
+                      >
+                        <span className="text-lg">+</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveProductOption(option.id)}
+                        className="w-8 h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center text-red-600 hover:text-red-800"
+                        title="Remove row"
+                      >
+                        <span className="text-lg">×</span>
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+
+            {/* Add Row Button */}
+            <div className="p-3 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleAddProductOption}
+                className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-md text-gray-600 hover:border-gray-400 hover:text-gray-800 text-sm"
+              >
+                + Add Row
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* Tax Structure */}
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
           <h2 className="text-xl font-semibold mb-4">Tax & Shipping</h2>
@@ -588,84 +838,6 @@ function AddProductPageContent() {
           </div>
         </div>
 
-        {/* Product Options */}
-        <div className="bg-white rounded-lg shadow p-6 space-y-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Product Options</h2>
-            <button
-              type="button"
-              onClick={handleAddProductOption}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              Add Option
-            </button>
-          </div>
-
-          {selectedOptions.map((option, index) => {
-            const selectedOption = productOptions.find((o) => o.id === option.optionId);
-            return (
-              <div key={index} className="p-4 border border-gray-200 rounded-md space-y-3">
-                <div className="flex justify-between items-center">
-                  <h3 className="font-medium">Option {index + 1}</h3>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveProductOption(index)}
-                    className="text-red-600 hover:text-red-800 text-sm"
-                  >
-                    Remove
-                  </button>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Select Option
-                  </label>
-                  <select
-                    value={option.optionId || ""}
-                    onChange={(e) => handleUpdateProductOption(index, parseInt(e.target.value))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select an option</option>
-                    {productOptions.map((opt) => (
-                      <option key={opt.id} value={opt.id}>
-                        {opt.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                {selectedOption && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Select Option Values
-                    </label>
-                    <div className="space-y-2">
-                      {selectedOption.values.map((value) => (
-                        <label key={value.id} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={option.optionValueIds.includes(value.id)}
-                            onChange={(e) => {
-                              const currentIds = option.optionValueIds;
-                              if (e.target.checked) {
-                                handleUpdateOptionValues(index, [...currentIds, value.id]);
-                              } else {
-                                handleUpdateOptionValues(
-                                  index,
-                                  currentIds.filter((id) => id !== value.id)
-                                );
-                              }
-                            }}
-                            className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                          />
-                          <span className="text-sm text-gray-700">{value.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
 
         {/* Submit Button */}
         <div className="flex justify-end space-x-4 pt-4">

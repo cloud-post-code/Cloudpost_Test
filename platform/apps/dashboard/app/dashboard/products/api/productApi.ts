@@ -98,6 +98,49 @@ export async function getProductOptions(): Promise<ProductOption[]> {
   return response.json();
 }
 
+export interface CreateOptionRequest {
+  name: string;
+  type: number;
+}
+
+export interface CreateOptionValueRequest {
+  optionId: number;
+  name: string;
+  colorCode?: string;
+}
+
+export async function createProductOption(data: CreateOptionRequest): Promise<ProductOption> {
+  const response = await fetch(`${API_BASE_URL}/products/options`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create product option");
+  }
+
+  return response.json();
+}
+
+export async function createOptionValue(data: CreateOptionValueRequest): Promise<ProductOptionValue> {
+  const response = await fetch(`${API_BASE_URL}/products/options/values`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to create option value");
+  }
+
+  return response.json();
+}
+
 export async function getTaxStructures(): Promise<TaxStructure[]> {
   const response = await fetch(`${API_BASE_URL}/tax/structures`, {
     method: "GET",
