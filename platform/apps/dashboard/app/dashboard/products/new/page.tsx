@@ -22,8 +22,10 @@ import {
   createProductOption,
   createOptionValue,
   CreateProductRequest,
+  ProductOption,
 } from "../api/productApi";
 import { cn } from "@/lib/utils";
+import { ProductOptionForm } from "../../shop/products/options/components/ProductOptionForm";
 
 const queryClient = new QueryClient();
 
@@ -65,6 +67,7 @@ function AddProductPageContent() {
   const [occasionSearch, setOccasionSearch] = useState("");
   const [occasionSuggestions, setOccasionSuggestions] = useState<string[]>([]);
   const [showOccasionSuggestions, setShowOccasionSuggestions] = useState(false);
+  const [showOptionForm, setShowOptionForm] = useState(false);
 
   const {
     register,
@@ -433,6 +436,24 @@ function AddProductPageContent() {
     }
   };
 
+  const handleOptionCreated = async (option: ProductOption) => {
+    // Refresh options
+    await queryClient.invalidateQueries({ queryKey: ["productOptions"] });
+    
+    // Add to selected options
+    setSelectedOptions([
+      ...selectedOptions,
+      {
+        id: Date.now().toString(),
+        optionId: option.id,
+        optionValueIds: [],
+        searchValue: "",
+      },
+    ]);
+    
+    setShowOptionForm(false);
+  };
+
   const createProductMutation = useMutation({
     mutationFn: createProduct,
     onSuccess: (data) => {
@@ -675,15 +696,10 @@ function AddProductPageContent() {
           <div className="flex justify-end mb-4">
             <button
               type="button"
-              onClick={() => {
-                const optionName = prompt("Enter option name:");
-                if (optionName) {
-                  handleCreateCustomOption(optionName);
-                }
-              }}
+              onClick={() => setShowOptionForm(true)}
               className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
             >
-              Add Custom Options
+              Add Custom Option
             </button>
           </div>
 
@@ -1042,6 +1058,41 @@ function AddProductPageContent() {
             setEditingImageId(null);
           }}
         />
+      )}
+
+      {/* Custom Option Form Modal */}
+      {showOptionForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">Create Product Option</h2>
+                <button
+                  onClick={() => setShowOptionForm(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+              <ProductOptionForm
+                onSuccess={handleOptionCreated}
+                onCancel={() => setShowOptionForm(false)}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
