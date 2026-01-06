@@ -40,11 +40,19 @@ export interface Tag {
   name: string;
 }
 
+export interface ProductCategory {
+  id: number;
+  identifier: string;
+  name: string;
+  parentId?: number;
+}
+
 export interface CreateProductRequest {
   name: string;
   description?: string;
   shortDescription?: string;
   occasion?: string;
+  categoryId?: number;
   image?: string;
   taxStructureId?: number;
   weight?: number;
@@ -130,6 +138,21 @@ export async function getTags(): Promise<Tag[]> {
 
   if (!response.ok) {
     throw new Error("Failed to fetch tags");
+  }
+
+  return response.json();
+}
+
+export async function getProductCategories(): Promise<ProductCategory[]> {
+  const response = await fetch(`${API_BASE_URL}/products/categories`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch product categories");
   }
 
   return response.json();

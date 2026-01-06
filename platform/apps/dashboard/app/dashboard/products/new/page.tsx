@@ -15,6 +15,7 @@ import {
   getTaxStructures,
   getShippingProfiles,
   getTags,
+  getProductCategories,
   createTag,
   createProduct,
   CreateProductRequest,
@@ -99,6 +100,11 @@ function AddProductPageContent() {
   const { data: existingTags = [] } = useQuery({
     queryKey: ["tags"],
     queryFn: getTags,
+  });
+
+  const { data: productCategories = [] } = useQuery({
+    queryKey: ["productCategories"],
+    queryFn: getProductCategories,
   });
 
   // Find default shipping profile
@@ -217,6 +223,7 @@ function AddProductPageContent() {
       name: data.productName,
       description: data.description,
       occasion: data.occasion,
+      categoryId: data.categoryId,
       image: data.image,
       taxStructureId: data.taxStructureId,
       weight: data.weight ? parseFloat(data.weight.toString()) : undefined,
@@ -275,24 +282,42 @@ function AddProductPageContent() {
           </div>
         </div>
 
-        {/* Occasion */}
+        {/* Occasion and Category */}
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Occasion</h2>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Occasion
-            </label>
-            <select
-              {...register("occasion")}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="">Select occasion</option>
-              {OCCASION_OPTIONS.map((occasion) => (
-                <option key={occasion} value={occasion}>
-                  {occasion}
-                </option>
-              ))}
-            </select>
+          <h2 className="text-xl font-semibold mb-4">Occasion & Category</h2>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Occasion
+              </label>
+              <select
+                {...register("occasion")}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select occasion</option>
+                {OCCASION_OPTIONS.map((occasion) => (
+                  <option key={occasion} value={occasion}>
+                    {occasion}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <select
+                {...register("categoryId", { valueAsNumber: true })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">Select category</option>
+                {productCategories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
