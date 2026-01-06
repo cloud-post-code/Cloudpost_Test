@@ -6,17 +6,14 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
 import { useQuery, useMutation, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   getProductOptions,
   createInventory,
   CreateInventoryRequest,
-  InventoryItem,
   ProductOption,
 } from "../../api/productApi";
-import { cn } from "@/lib/utils";
 
 const queryClient = new QueryClient();
 
@@ -188,7 +185,11 @@ function InventoryPageContent() {
     createInventoryMutation.mutate(inventoryData);
   };
 
-  const updateInventoryItem = (index: number, field: keyof InventoryFormItem, value: any) => {
+  const updateInventoryItem = (
+    index: number,
+    field: "price" | "quantity" | "sku",
+    value: number | string
+  ) => {
     const updated = [...inventoryItems];
     updated[index] = { ...updated[index], [field]: value };
     setInventoryItems(updated);

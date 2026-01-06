@@ -18,8 +18,6 @@ import {
   createTag,
   createProduct,
   CreateProductRequest,
-  ProductOption,
-  ProductOptionValue,
 } from "../api/productApi";
 import { cn } from "@/lib/utils";
 
