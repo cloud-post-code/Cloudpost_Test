@@ -7,7 +7,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const navigation = [
   { name: "Orders", href: "/dashboard/orders", icon: "🛒" },
@@ -26,18 +26,31 @@ const shopNavigation = [
 ];
 
 const productsNavigation = [
+  { name: "Products", href: "/dashboard/products", icon: "📦" },
+  { name: "Inventory", href: "/dashboard/inventory", icon: "📋" },
   { name: "Product Options", href: "/dashboard/shop/products/options", icon: "⚙️" },
   { name: "Tags", href: "/dashboard/shop/products/tags", icon: "🏷️" },
-  { name: "Products", href: "/dashboard/shop/products", icon: "📦" },
-  { name: "Inventory", href: "/dashboard/products/inventory", icon: "📋" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const isShopSection = pathname?.startsWith("/dashboard/shop") && !pathname?.startsWith("/dashboard/shop/products");
-  const isProductsSection = pathname?.startsWith("/dashboard/shop/products") || pathname?.startsWith("/dashboard/products");
+  
+  // Check if any product navigation item is active
+  const isProductNavActive = productsNavigation.some(
+    (item) => pathname === item.href || pathname?.startsWith(item.href + "/")
+  );
+  
+  // Auto-open products dropdown if any product page is active
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isProductsOpen, setIsProductsOpen] = useState(isProductNavActive);
+
+  // Keep products dropdown open when navigating to product pages
+  useEffect(() => {
+    if (isProductNavActive) {
+      setIsProductsOpen(true);
+    }
+  }, [isProductNavActive]);
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -107,12 +120,7 @@ export function Sidebar() {
         <div>
           <button
             onClick={() => setIsProductsOpen(!isProductsOpen)}
-            className={cn(
-              "w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-              isProductsSection
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-            )}
+            className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors text-gray-700 hover:bg-gray-50 hover:text-gray-900"
           >
             <div className="flex items-center">
               <span className="mr-3 text-lg">📦</span>
