@@ -67,6 +67,9 @@ function AddProductPageContent() {
   const [occasionSearch, setOccasionSearch] = useState("");
   const [occasionSuggestions, setOccasionSuggestions] = useState<string[]>([]);
   const [showOccasionSuggestions, setShowOccasionSuggestions] = useState(false);
+  const [categorySearch, setCategorySearch] = useState("");
+  const [categorySuggestions, setCategorySuggestions] = useState<typeof productCategories>([]);
+  const [showCategorySuggestions, setShowCategorySuggestions] = useState(false);
   const [showOptionForm, setShowOptionForm] = useState(false);
 
   const {
@@ -133,6 +136,17 @@ function AddProductPageContent() {
     }
   }, [occasionValue, occasionSearch]);
 
+  // Watch category field to sync with search
+  const categoryIdValue = watch("categoryId");
+  useEffect(() => {
+    if (categoryIdValue && !categorySearch) {
+      const category = productCategories.find((cat) => cat.id === categoryIdValue);
+      if (category) {
+        setCategorySearch(category.name + (category.type ? ` (${category.type})` : ""));
+      }
+    }
+  }, [categoryIdValue, categorySearch, productCategories]);
+
   // Handle clone data from sessionStorage
   useEffect(() => {
     const cloneDataStr = sessionStorage.getItem("productCloneData");
@@ -146,7 +160,11 @@ function AddProductPageContent() {
           setValue("occasion", cloneData.occasion);
           setOccasionSearch(cloneData.occasion);
         }
-        if (cloneData.categoryId) setValue("categoryId", cloneData.categoryIds?.[0]);
+        if (cloneData.categoryId) {
+          const categoryId = cloneData.categoryIds?.[0];
+          setValue("categoryId", categoryId);
+          // Set category search will be handled by useEffect
+        }
         if (cloneData.weight !== undefined) setValue("weight", cloneData.weight);
         if (cloneData.weightUnit) setValue("weightUnit", cloneData.weightUnit);
         if (cloneData.canBeCustom !== undefined) setValue("canBeCustom", cloneData.canBeCustom);
@@ -177,15 +195,15 @@ function AddProductPageContent() {
     }
   }, [defaultShippingProfile, setValue]);
 
-  // Auto-set fulfillment type based on shipping profile
+  // Set default fulfillment type based on shipping profile when profile changes
+  const fulfillmentTypeValue = watch("fulfillmentType");
   useEffect(() => {
-    if (selectedShippingProfile) {
-      // Auto-set fulfillment type based on profile (default to 1 = Shipping)
-      // This should be determined by the shipping profile's fulfillment method
-      // For now, defaulting to 1 (Shipping), but this should come from the profile
+    if (selectedShippingProfile && !fulfillmentTypeValue) {
+      // Default to 1 (Shipping) if profile doesn't specify
+      // TODO: Get fulfillment method from shipping profile when available
       setValue("fulfillmentType", 1);
     }
-  }, [selectedShippingProfile, setValue]);
+  }, [selectedShippingProfile, setValue, fulfillmentTypeValue]);
 
   // Handle occasion search
   useEffect(() => {
@@ -205,6 +223,26 @@ function AddProductPageContent() {
     setValue("occasion", occasion);
     setOccasionSearch(occasion);
     setShowOccasionSuggestions(false);
+  };
+
+  // Handle category search
+  useEffect(() => {
+    if (categorySearch.trim()) {
+      const filtered = productCategories.filter((cat) =>
+        cat.name.toLowerCase().includes(categorySearch.toLowerCase())
+      );
+      setCategorySuggestions(filtered);
+      setShowCategorySuggestions(true);
+    } else {
+      setCategorySuggestions([]);
+      setShowCategorySuggestions(false);
+    }
+  }, [categorySearch, productCategories]);
+
+  const handleCategorySelect = (category: typeof productCategories[0]) => {
+    setValue("categoryId", category.id);
+    setCategorySearch(category.name + (category.type ? ` (${category.type})` : ""));
+    setShowCategorySuggestions(false);
   };
 
   const handleImageFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -620,21 +658,47 @@ function AddProductPageContent() {
                 </div>
               )}
             </div>
-            <div>
+            <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Category
               </label>
-              <select
-                {...register("categoryId", { valueAsNumber: true })}
+              <input
+                type="text"
+                value={categorySearch}
+                onChange={(e) => {
+                  setCategorySearch(e.target.value);
+                  if (!e.target.value.trim()) {
+                    setValue("categoryId", undefined);
+                  }
+                }}
+                onFocus={() => {
+                  if (categorySearch.trim()) {
+                    setShowCategorySuggestions(true);
+                  }
+                }}
+                onBlur={() => {
+                  // Delay hiding suggestions to allow click
+                  setTimeout(() => setShowCategorySuggestions(false), 200);
+                }}
+                placeholder="Search or type category..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select category</option>
-                {productCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name} {category.type ? `(${category.type})` : ""}
-                  </option>
-                ))}
-              </select>
+              />
+              {showCategorySuggestions && categorySuggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                  {categorySuggestions.map((category) => (
+                    <div
+                      key={category.id}
+                      className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        handleCategorySelect(category);
+                      }}
+                    >
+                      {category.name} {category.type ? `(${category.type})` : ""}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -908,14 +972,10 @@ function AddProductPageContent() {
             <select
               {...register("fulfillmentType", { valueAsNumber: true })}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              disabled
             >
               <option value={1}>Shipping</option>
               <option value={2}>Pickup</option>
             </select>
-            <p className="mt-1 text-xs text-gray-500">
-              Automatically set based on shipping profile
-            </p>
           </div>
         </div>
 
