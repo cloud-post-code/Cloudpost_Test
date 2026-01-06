@@ -405,7 +405,7 @@ function AddProductPageContent() {
                     className="mr-2 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                   />
                   <span className="text-sm font-medium text-gray-700">Mark Item as Featured</span>
-                </label>
+            </label>
               )}
             />
           </div>
@@ -416,7 +416,7 @@ function AddProductPageContent() {
               control={control}
               render={({ field: { value, onChange } }) => (
                 <label className="flex items-center cursor-pointer">
-                  <input
+            <input
                     type="checkbox"
                     checked={value || false}
                     onChange={(e) => onChange(e.target.checked)}
@@ -484,13 +484,13 @@ function AddProductPageContent() {
                   className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
                 >
                   {tag.value}
-                  <button
+            <button
                     type="button"
                     onClick={() => handleRemoveTag(tag.id)}
                     className="ml-2 text-blue-600 hover:text-blue-800"
-                  >
+            >
                     ×
-                  </button>
+            </button>
                 </span>
               ))}
             </div>
@@ -582,8 +582,8 @@ function AddProductPageContent() {
             type="button"
             onClick={() => router.back()}
             className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-          >
-            Cancel
+            >
+              Cancel
           </button>
           <button
             type="submit"
@@ -591,9 +591,9 @@ function AddProductPageContent() {
             className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {createProductMutation.isPending ? "Creating..." : "Continue to Inventory"}
-          </button>
-        </div>
-      </form>
+            </button>
+          </div>
+        </form>
 
       {showImageCropper && imageFile && (
         <ImageCropper
