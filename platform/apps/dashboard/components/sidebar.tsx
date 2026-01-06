@@ -11,8 +11,6 @@ import { useState } from "react";
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: "📊" },
-  { name: "Products", href: "/dashboard/products", icon: "📦" },
-  { name: "Inventory", href: "/dashboard/inventory", icon: "📋" },
   { name: "Orders", href: "/dashboard/orders", icon: "🛒" },
   { name: "Shipping", href: "/dashboard/shipping", icon: "🚚" },
   { name: "Wallet", href: "/dashboard/wallet", icon: "💰" },
@@ -39,6 +37,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const isShopSection = pathname?.startsWith("/dashboard/shop");
   const isProductsSection = pathname?.startsWith("/dashboard/shop/products");
+  const isProductsPage = pathname?.startsWith("/dashboard/products");
   const [isShopOpen, setIsShopOpen] = useState(isShopSection);
   const [isProductsOpen, setIsProductsOpen] = useState(isProductsSection);
 
@@ -134,6 +133,20 @@ export function Sidebar() {
             </div>
           )}
         </div>
+
+        {/* Products - Standalone item directly below Shop */}
+        <Link
+          href="/dashboard/products"
+          className={cn(
+            "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+            isProductsPage
+              ? "bg-blue-50 text-blue-700"
+              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          )}
+        >
+          <span className="mr-3 text-lg">📦</span>
+          Products
+        </Link>
 
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
