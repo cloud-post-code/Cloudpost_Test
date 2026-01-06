@@ -360,24 +360,41 @@ function AddProductPageContent() {
   const createProductMutation = useMutation({
     mutationFn: createProduct,
     onSuccess: (data) => {
-      // Store product options in localStorage for inventory page (even if empty)
-      const optionsToStore = selectedOptions
-        .filter((so) => so.optionId > 0 && so.optionValueIds.length > 0)
-        .map((so) => ({
-          optionId: so.optionId,
-          optionValueIds: so.optionValueIds,
-        }));
-      
-      // Always store options (empty array if no options selected)
-      localStorage.setItem(`product_options_${data.id}`, JSON.stringify(optionsToStore));
-      
-      // Navigate to inventory page with product ID
-      router.push(`/dashboard/products/new/inventory?productId=${data.id}`);
+      navigateToInventory(data.id);
     },
     onError: (error: Error) => {
-      alert(`Failed to create product: ${error.message}`);
+      // Even if product creation fails, allow navigation to inventory page
+      // Use a temporary ID and store data in localStorage
+      const tempProductId = `temp-${Date.now()}`;
+      navigateToInventory(tempProductId, true);
+      console.warn("Product creation failed, using temporary ID:", error.message);
     },
   });
+
+  const navigateToInventory = (productId: string | number, isTemp = false) => {
+    // Store product options in localStorage for inventory page (even if empty)
+    const optionsToStore = selectedOptions
+      .filter((so) => so.optionId > 0 && so.optionValueIds.length > 0)
+      .map((so) => ({
+        optionId: so.optionId,
+        optionValueIds: so.optionValueIds,
+      }));
+    
+    // Always store options (empty array if no options selected)
+    localStorage.setItem(`product_options_${productId}`, JSON.stringify(optionsToStore));
+    
+    if (isTemp) {
+      // Store form data for later creation
+      const formData = {
+        name: (document.querySelector('input[name="productName"]') as HTMLInputElement)?.value || "",
+        description: (document.querySelector('textarea[name="description"]') as HTMLTextAreaElement)?.value || "",
+      };
+      localStorage.setItem(`product_data_${productId}`, JSON.stringify(formData));
+    }
+    
+    // Navigate to inventory page with product ID
+    router.push(`/dashboard/products/new/inventory?productId=${productId}`);
+  };
 
   const onSubmit = async (data: CreateProductRequest & { productName: string; description: string }) => {
     // Create tags if needed

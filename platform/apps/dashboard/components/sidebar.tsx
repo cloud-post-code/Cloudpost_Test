@@ -29,20 +29,15 @@ const productsNavigation = [
   { name: "Product Options", href: "/dashboard/shop/products/options", icon: "⚙️" },
   { name: "Tags", href: "/dashboard/shop/products/tags", icon: "🏷️" },
   { name: "Products", href: "/dashboard/shop/products", icon: "📦" },
-];
-
-const inventoryNavigation = [
-  { name: "Inventory", href: "/dashboard/products/new/inventory", icon: "📋" },
+  { name: "Inventory", href: "/dashboard/products/inventory", icon: "📋" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const isShopSection = pathname?.startsWith("/dashboard/shop") && !pathname?.startsWith("/dashboard/shop/products");
-  const isProductsSection = pathname?.startsWith("/dashboard/shop/products");
-  const isInventorySection = pathname?.startsWith("/dashboard/products");
+  const isProductsSection = pathname?.startsWith("/dashboard/shop/products") || pathname?.startsWith("/dashboard/products");
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
-  const [isInventoryOpen, setIsInventoryOpen] = useState(false);
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 flex flex-col">
@@ -130,49 +125,6 @@ export function Sidebar() {
           {isProductsOpen && (
             <div className="ml-4 mt-1 space-y-1">
               {productsNavigation.map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
-                return (
-                  <Link
-                    key={item.name}
-                    href={item.href}
-                    className={cn(
-                      "flex items-center px-4 py-2 text-sm rounded-lg transition-colors",
-                      isActive
-                        ? "bg-blue-50 text-blue-700 font-medium"
-                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                    )}
-                  >
-                    <span className="mr-2 text-sm">{item.icon}</span>
-                    {item.name}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Inventory - Standalone collapsible menu */}
-        <div>
-          <button
-            onClick={() => setIsInventoryOpen(!isInventoryOpen)}
-            className={cn(
-              "w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-              isInventorySection
-                ? "bg-blue-50 text-blue-700"
-                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
-            )}
-          >
-            <div className="flex items-center">
-              <span className="mr-3 text-lg">📋</span>
-              Inventory
-            </div>
-            <span className={cn("transition-transform", isInventoryOpen && "rotate-180")}>
-              ▼
-            </span>
-          </button>
-          {isInventoryOpen && (
-            <div className="ml-4 mt-1 space-y-1">
-              {inventoryNavigation.map((item) => {
                 const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
                 return (
                   <Link

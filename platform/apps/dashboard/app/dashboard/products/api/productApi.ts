@@ -249,3 +249,33 @@ export async function createInventory(data: CreateInventoryRequest): Promise<voi
   }
 }
 
+export interface InventoryItem {
+  id: number;
+  productId: number;
+  productName?: string;
+  sku?: string;
+  price: number;
+  quantity: number;
+  optionCombination: {
+    optionId: number;
+    optionValueId: number;
+    optionName?: string;
+    optionValueName?: string;
+  }[];
+}
+
+export async function getInventories(): Promise<InventoryItem[]> {
+  const response = await fetch(`${API_BASE_URL}/products/inventory`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch inventories");
+  }
+
+  return response.json();
+}
+
