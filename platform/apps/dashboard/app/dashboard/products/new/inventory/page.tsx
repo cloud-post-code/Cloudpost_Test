@@ -5,7 +5,7 @@
  * Step 2: Set price and quantity for each product option combination
  */
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useQuery, useMutation, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -308,10 +308,20 @@ function InventoryPageContent() {
   );
 }
 
+function InventoryPageLoading() {
+  return (
+    <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-gray-500">Loading...</div>
+    </div>
+  );
+}
+
 export default function InventoryPage() {
   return (
     <QueryClientProvider client={queryClient}>
-      <InventoryPageContent />
+      <Suspense fallback={<InventoryPageLoading />}>
+        <InventoryPageContent />
+      </Suspense>
     </QueryClientProvider>
   );
 }
