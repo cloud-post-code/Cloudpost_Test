@@ -10,7 +10,6 @@ import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 const navigation = [
-  { name: "Dashboard", href: "/dashboard", icon: "📊" },
   { name: "Orders", href: "/dashboard/orders", icon: "🛒" },
   { name: "Shipping", href: "/dashboard/shipping", icon: "🚚" },
   { name: "Wallet", href: "/dashboard/wallet", icon: "💰" },
@@ -27,17 +26,17 @@ const shopNavigation = [
 ];
 
 const productsNavigation = [
+  { name: "Product", href: "/dashboard/products", icon: "📦" },
+  { name: "Inventory", href: "/dashboard/products/new/inventory", icon: "📋" },
   { name: "Product Options", href: "/dashboard/shop/products/options", icon: "⚙️" },
   { name: "Tags", href: "/dashboard/shop/products/tags", icon: "🏷️" },
   { name: "Products", href: "/dashboard/shop/products", icon: "📦" },
-  { name: "Inventory", href: "/dashboard/shop/products/inventory", icon: "📋" },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
-  const isShopSection = pathname?.startsWith("/dashboard/shop");
-  const isProductsSection = pathname?.startsWith("/dashboard/shop/products");
-  const isProductsPage = pathname?.startsWith("/dashboard/products");
+  const isShopSection = pathname?.startsWith("/dashboard/shop") && !pathname?.startsWith("/dashboard/shop/products");
+  const isProductsSection = pathname?.startsWith("/dashboard/products") || pathname?.startsWith("/dashboard/shop/products");
   const [isShopOpen, setIsShopOpen] = useState(isShopSection);
   const [isProductsOpen, setIsProductsOpen] = useState(isProductsSection);
 
@@ -48,7 +47,21 @@ export function Sidebar() {
         <p className="text-sm text-gray-500 mt-1">Seller Dashboard</p>
       </div>
       <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-        {/* Shop Dropdown - Moved to top */}
+        {/* Dashboard - First */}
+        <Link
+          href="/dashboard"
+          className={cn(
+            "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+            pathname === "/dashboard"
+              ? "bg-blue-50 text-blue-700"
+              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+          )}
+        >
+          <span className="mr-3 text-lg">📊</span>
+          Dashboard
+        </Link>
+
+        {/* Shop Dropdown */}
         <div>
           <button
             onClick={() => setIsShopOpen(!isShopOpen)}
@@ -87,66 +100,52 @@ export function Sidebar() {
                   </Link>
                 );
               })}
-              
-              {/* Products Submenu */}
-              <div>
-                <button
-                  onClick={() => setIsProductsOpen(!isProductsOpen)}
-                  className={cn(
-                    "w-full flex items-center justify-between px-4 py-2 text-sm rounded-lg transition-colors",
-                    isProductsSection
-                      ? "bg-blue-50 text-blue-700 font-medium"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                  )}
-                >
-                  <div className="flex items-center">
-                    <span className="mr-2 text-sm">📦</span>
-                    Products
-                  </div>
-                  <span className={cn("transition-transform text-xs", isProductsOpen && "rotate-180")}>
-                    ▼
-                  </span>
-                </button>
-                {isProductsOpen && (
-                  <div className="ml-4 mt-1 space-y-1">
-                    {productsNavigation.map((item) => {
-                      const isActive = pathname === item.href;
-                      return (
-                        <Link
-                          key={item.name}
-                          href={item.href}
-                          className={cn(
-                            "flex items-center px-4 py-2 text-xs rounded-lg transition-colors",
-                            isActive
-                              ? "bg-blue-50 text-blue-700 font-medium"
-                              : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                          )}
-                        >
-                          <span className="mr-2 text-xs">{item.icon}</span>
-                          {item.name}
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
             </div>
           )}
         </div>
 
-        {/* Products - Standalone item directly below Shop */}
-        <Link
-          href="/dashboard/products"
-          className={cn(
-            "flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-colors",
-            isProductsPage
-              ? "bg-blue-50 text-blue-700"
-              : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+        {/* Products - Standalone collapsible menu */}
+        <div>
+          <button
+            onClick={() => setIsProductsOpen(!isProductsOpen)}
+            className={cn(
+              "w-full flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors",
+              isProductsSection
+                ? "bg-blue-50 text-blue-700"
+                : "text-gray-700 hover:bg-gray-50 hover:text-gray-900"
+            )}
+          >
+            <div className="flex items-center">
+              <span className="mr-3 text-lg">📦</span>
+              Products
+            </div>
+            <span className={cn("transition-transform", isProductsOpen && "rotate-180")}>
+              ▼
+            </span>
+          </button>
+          {isProductsOpen && (
+            <div className="ml-4 mt-1 space-y-1">
+              {productsNavigation.map((item) => {
+                const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className={cn(
+                      "flex items-center px-4 py-2 text-sm rounded-lg transition-colors",
+                      isActive
+                        ? "bg-blue-50 text-blue-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    )}
+                  >
+                    <span className="mr-2 text-sm">{item.icon}</span>
+                    {item.name}
+                  </Link>
+                );
+              })}
+            </div>
           )}
-        >
-          <span className="mr-3 text-lg">📦</span>
-          Products
-        </Link>
+        </div>
 
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + "/");
