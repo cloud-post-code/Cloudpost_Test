@@ -56,10 +56,17 @@ interface TagInput {
   value: string;
 }
 
+interface ProductImage {
+  id: string;
+  url: string;
+}
+
 function AddProductPageContent() {
   const router = useRouter();
   const [imageFile, setImageFile] = useState<string | null>(null);
+  const [editingImageId, setEditingImageId] = useState<string | null>(null);
   const [showImageCropper, setShowImageCropper] = useState(false);
+  const [productImages, setProductImages] = useState<ProductImage[]>([]);
   const [tags, setTags] = useState<TagInput[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [selectedOptions, setSelectedOptions] = useState<ProductOptionSelection[]>([]);
@@ -122,6 +129,7 @@ function AddProductPageContent() {
       const reader = new FileReader();
       reader.onloadend = () => {
         setImageFile(reader.result as string);
+        setEditingImageId(null); // New image, not editing existing
         setShowImageCropper(true);
       };
       reader.readAsDataURL(file);
@@ -129,9 +137,44 @@ function AddProductPageContent() {
   };
 
   const handleImageCropComplete = (croppedImage: string) => {
-    setValue("image", croppedImage);
+    if (editingImageId) {
+      // Update existing image
+      setProductImages((prev) =>
+        prev.map((img) => (img.id === editingImageId ? { ...img, url: croppedImage } : img))
+      );
+      setEditingImageId(null);
+    } else {
+      // Add new image
+      const newImage: ProductImage = {
+        id: Date.now().toString(),
+        url: croppedImage,
+      };
+      setProductImages((prev) => [...prev, newImage]);
+    }
+    
+    // Update form value
+    const imageUrls = editingImageId
+      ? productImages.map((img) => (img.id === editingImageId ? croppedImage : img.url))
+      : [...productImages.map((img) => img.url), croppedImage];
+    setValue("images", imageUrls);
+    
     setShowImageCropper(false);
     setImageFile(null);
+  };
+
+  const handleEditImage = (imageId: string) => {
+    const image = productImages.find((img) => img.id === imageId);
+    if (image) {
+      setImageFile(image.url);
+      setEditingImageId(imageId);
+      setShowImageCropper(true);
+    }
+  };
+
+  const handleDeleteImage = (imageId: string) => {
+    const updatedImages = productImages.filter((img) => img.id !== imageId);
+    setProductImages(updatedImages);
+    setValue("images", updatedImages.map((img) => img.url));
   };
 
   const handleAddTag = () => {
@@ -224,7 +267,7 @@ function AddProductPageContent() {
       description: data.description,
       occasion: data.occasion,
       categoryId: data.categoryId,
-      image: data.image,
+      images: productImages.map((img) => img.url),
       taxStructureId: data.taxStructureId,
       weight: data.weight ? parseFloat(data.weight.toString()) : undefined,
       weightUnit: data.weightUnit,
@@ -323,7 +366,7 @@ function AddProductPageContent() {
 
         {/* Image Upload */}
         <div className="bg-white rounded-lg shadow p-6 space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Product Image</h2>
+          <h2 className="text-xl font-semibold mb-4">Product Images</h2>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Upload Image (1:1)
@@ -334,16 +377,39 @@ function AddProductPageContent() {
               onChange={handleImageFileChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             />
-            {watch("image") && (
-              <div className="mt-4">
-                <img
-                  src={watch("image")}
-                  alt="Product preview"
-                  className="w-32 h-32 object-cover rounded-md"
-                />
-              </div>
-            )}
           </div>
+          
+          {productImages.length > 0 && (
+            <div className="mt-4">
+              <div className="grid grid-cols-4 gap-4">
+                {productImages.map((image) => (
+                  <div key={image.id} className="relative group">
+                    <img
+                      src={image.url}
+                      alt="Product preview"
+                      className="w-full aspect-square object-cover rounded-md border border-gray-200"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-md flex items-center justify-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleEditImage(image.id)}
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-opacity"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteImage(image.id)}
+                        className="opacity-0 group-hover:opacity-100 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-opacity"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tax Structure */}
@@ -627,6 +693,7 @@ function AddProductPageContent() {
           onCancel={() => {
             setShowImageCropper(false);
             setImageFile(null);
+            setEditingImageId(null);
           }}
         />
       )}

@@ -53,7 +53,7 @@ export interface CreateProductRequest {
   shortDescription?: string;
   occasion?: string;
   categoryId?: number;
-  image?: string;
+  images?: string[];
   taxStructureId?: number;
   weight?: number;
   weightUnit?: number;
