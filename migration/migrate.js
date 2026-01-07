@@ -184,61 +184,39 @@ async function runMigration() {
     console.log('Running database schema migration...');
     console.log('This may take a few minutes...');
     
-    // Execute schema with error handling for existing tables
+    // Execute the entire schema at once
+    // MySQL will handle existing tables - we'll catch and report errors but continue
     try {
       await dbConnection.query(schema);
+      console.log('✓ Schema executed successfully');
     } catch (error) {
       // Check if error is due to existing tables
       if (error.code === 'ER_TABLE_EXISTS_ERROR' || 
           (error.message && error.message.includes('already exists'))) {
         console.log('');
-        console.log('⚠️  Some tables already exist. This is normal if migration was partially run.');
-        console.log('The migration script will continue and skip existing tables.');
+        console.log('⚠️  Some tables already exist. This is expected if migration was partially run.');
+        console.log('The database may already be partially or fully migrated.');
+        console.log('');
+        console.log('Checking current table count...');
+        
+        // Check what tables exist
+        const [tables] = await dbConnection.query('SHOW TABLES');
+        console.log(`Found ${tables.length} existing table(s) in the database.`);
         console.log('');
         
-        // Try to execute statements one by one to skip existing tables
-        const statements = schema
-          .split(';')
-          .map(s => s.trim())
-          .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
-        
-        let successCount = 0;
-        let skipCount = 0;
-        let errorCount = 0;
-        
-        for (const statement of statements) {
-          try {
-            if (statement.toLowerCase().includes('create table')) {
-              // Check if table exists before creating
-              const tableMatch = statement.match(/create table\s+(?:if not exists\s+)?[`']?(\w+)[`']?/i);
-              if (tableMatch) {
-                const tableName = tableMatch[1];
-                const [tables] = await dbConnection.query(`SHOW TABLES LIKE '${tableName}'`);
-                if (tables.length > 0) {
-                  skipCount++;
-                  continue;
-                }
-              }
-            }
-            await dbConnection.query(statement);
-            successCount++;
-          } catch (stmtError) {
-            if (stmtError.code === 'ER_TABLE_EXISTS_ERROR' || 
-                (stmtError.message && stmtError.message.includes('already exists'))) {
-              skipCount++;
-            } else {
-              errorCount++;
-              console.error(`Error executing statement: ${stmtError.message.substring(0, 100)}`);
-            }
-          }
-        }
-        
-        console.log(`Migration completed: ${successCount} created, ${skipCount} skipped, ${errorCount} errors`);
-        
-        if (errorCount > 0) {
-          throw new Error(`Migration completed with ${errorCount} errors`);
+        if (tables.length > 0) {
+          console.log('Migration appears to have been completed previously.');
+          console.log('If you need to re-run migration, drop tables first or use a fresh database.');
+        } else {
+          // No tables but got error - might be a different issue
+          throw error;
         }
       } else {
+        // Other errors - show more details
+        console.error('Migration error:', error.message);
+        if (error.sql) {
+          console.error('SQL context:', error.sql.substring(0, 200));
+        }
         throw error;
       }
     }
