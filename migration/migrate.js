@@ -97,7 +97,9 @@ async function runMigration() {
     // Read schema file
     // Try multiple possible paths for Railway environment
     const possiblePaths = [
+      path.join(__dirname, 'schema.sql'), // In same directory as script (migration/)
       path.join(__dirname, '../database/schema.sql'), // From migration/ directory
+      path.join(process.cwd(), 'schema.sql'), // In current working directory
       path.join(process.cwd(), '../database/schema.sql'), // From working directory
       '/app/database/schema.sql', // Absolute path in Railway
       path.join(process.cwd(), 'database/schema.sql'), // If cwd is root
