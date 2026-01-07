@@ -95,11 +95,31 @@ async function runMigration() {
     await waitForMySQL();
 
     // Read schema file
-    const schemaPath = path.join(__dirname, '../database/schema.sql');
-    if (!fs.existsSync(schemaPath)) {
-      console.error(`Error: Schema file not found at ${schemaPath}`);
+    // Try multiple possible paths for Railway environment
+    const possiblePaths = [
+      path.join(__dirname, '../database/schema.sql'), // From migration/ directory
+      path.join(process.cwd(), '../database/schema.sql'), // From working directory
+      '/app/database/schema.sql', // Absolute path in Railway
+      path.join(process.cwd(), 'database/schema.sql'), // If cwd is root
+    ];
+    
+    let schemaPath = null;
+    for (const possiblePath of possiblePaths) {
+      if (fs.existsSync(possiblePath)) {
+        schemaPath = possiblePath;
+        break;
+      }
+    }
+    
+    if (!schemaPath) {
+      console.error('Error: Schema file not found. Tried paths:');
+      possiblePaths.forEach(p => console.error(`  - ${p}`));
+      console.error(`Current working directory: ${process.cwd()}`);
+      console.error(`__dirname: ${__dirname}`);
       process.exit(1);
     }
+    
+    console.log(`Using schema file: ${schemaPath}`);
 
     console.log('Connecting to database...');
     // Connect without specifying database first (in case it doesn't exist)
