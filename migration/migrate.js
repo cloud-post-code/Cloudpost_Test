@@ -43,8 +43,14 @@ async function waitForMySQL(maxRetries = 30) {
 
 async function checkTablesExist(connection) {
   try {
+    // Ensure we're using the correct database
+    await connection.query(`USE ${config.database}`);
     const [tables] = await connection.query('SHOW TABLES');
-    return tables.length > 0;
+    const tableCount = tables.length;
+    if (tableCount > 0) {
+      console.log(`Found ${tableCount} existing table(s) in database`);
+    }
+    return tableCount > 0;
   } catch (error) {
     // Database might not exist yet, or no tables, or connection issue
     if (error.code === 'ER_BAD_DB_ERROR') {
@@ -52,6 +58,7 @@ async function checkTablesExist(connection) {
       return false;
     }
     // Other errors - assume no tables
+    console.log(`Warning: Could not check tables: ${error.message}`);
     return false;
   }
 }
