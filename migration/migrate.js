@@ -179,7 +179,15 @@ async function runMigration() {
     }
 
     console.log('Reading schema file...');
-    const schema = fs.readFileSync(schemaPath, 'utf8');
+    let schema = fs.readFileSync(schemaPath, 'utf8');
+
+    // Remove DELIMITER statements - they're not supported in mysql2
+    // DELIMITER is only for mysql command-line client
+    schema = schema.replace(/^DELIMITER\s+[^\n]*$/gim, '');
+    
+    // Remove DELIMITER $$ and DELIMITER ; statements
+    schema = schema.replace(/DELIMITER\s+\$\$/gi, '');
+    schema = schema.replace(/DELIMITER\s+;/gi, '');
 
     console.log('Running database schema migration...');
     console.log('This may take a few minutes...');
