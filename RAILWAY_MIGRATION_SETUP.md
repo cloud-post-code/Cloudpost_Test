@@ -18,10 +18,12 @@ This guide explains how to automatically run `database/schema.sql` on Railway My
 1. Click "New Service" → Select "GitHub Repo" (or "Empty Service")
 2. Name it: **"Database Migration"**
 3. Configure the service:
-   - **Root Directory**: Leave empty (root)
-   - **Build Command**: `npm install` (installs all dependencies including mysql2)
-   - **Start Command**: `node scripts/railway-migrate.js`
+   - **Root Directory**: `migration` (important: use the migration directory)
+   - **Build Command**: `npm install`
+   - **Start Command**: `npm start` (or `node migrate.js`)
    - **Service Type**: One-off (or regular service that exits after completion)
+
+   **Note**: The `migration/` directory contains a minimal `package.json` with only `mysql2` dependency, avoiding workspace protocol issues with the monorepo.
 
    **Alternative (using bash script - requires mysql client):**
    - **Build Command**: `echo "Migration service - no build needed"`
