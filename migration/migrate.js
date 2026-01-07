@@ -89,6 +89,26 @@ async function runMigration() {
   console.log(`Database: ${config.database}`);
   console.log(`User: ${config.user}`);
   console.log('');
+  
+  // List all databases to help debug
+  console.log('Available databases:');
+  try {
+    const tempConnection = await mysql.createConnection({
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      password: config.password,
+    });
+    const [databases] = await tempConnection.query('SHOW DATABASES');
+    databases.forEach(db => {
+      const dbName = Object.values(db)[0];
+      console.log(`  - ${dbName}`);
+    });
+    await tempConnection.end();
+  } catch (err) {
+    console.log('  (Could not list databases)');
+  }
+  console.log('');
 
   if (!config.host || !config.user || !config.password) {
     console.error('Error: MySQL environment variables not set.');
@@ -207,14 +227,29 @@ async function runMigration() {
         console.log('');
         console.log('Checking current table count...');
         
-        // Check what tables exist
+        // Check what tables exist and show details
+        await dbConnection.query(`USE ${config.database}`);
         const [tables] = await dbConnection.query('SHOW TABLES');
-        console.log(`Found ${tables.length} existing table(s) in the database.`);
-        console.log('');
+        console.log(`Found ${tables.length} existing table(s) in database '${config.database}'.`);
         
         if (tables.length > 0) {
+          console.log('');
+          console.log('First 10 tables found:');
+          tables.slice(0, 10).forEach((table, idx) => {
+            const tableName = Object.values(table)[0];
+            console.log(`  ${idx + 1}. ${tableName}`);
+          });
+          if (tables.length > 10) {
+            console.log(`  ... and ${tables.length - 10} more`);
+          }
+          console.log('');
           console.log('Migration appears to have been completed previously.');
-          console.log('If you need to re-run migration, drop tables first or use a fresh database.');
+          console.log(`All tables are in database: ${config.database}`);
+          console.log('');
+          console.log('To view tables in Railway:');
+          console.log(`  1. Go to MySQL service → Database tab`);
+          console.log(`  2. Make sure you're viewing database: ${config.database}`);
+          console.log(`  3. Or use MySQL Console and run: USE ${config.database}; SHOW TABLES;`);
         } else {
           // No tables but got error - might be a different issue
           throw error;
@@ -238,10 +273,23 @@ async function runMigration() {
 
     // Verify tables were created
     const verifyConnection = await mysql.createConnection(config);
+    await verifyConnection.query(`USE ${config.database}`);
     const [tables] = await verifyConnection.query('SHOW TABLES');
     await verifyConnection.end();
     
-    console.log(`Tables created: ${tables.length}`);
+    console.log(`Tables in database '${config.database}': ${tables.length}`);
+    
+    if (tables.length > 0) {
+      console.log('');
+      console.log('First 10 tables:');
+      tables.slice(0, 10).forEach((table, idx) => {
+        const tableName = Object.values(table)[0];
+        console.log(`  ${idx + 1}. ${tableName}`);
+      });
+      if (tables.length > 10) {
+        console.log(`  ... and ${tables.length - 10} more`);
+      }
+    }
     console.log('');
     console.log('Migration service can now be stopped/deleted.');
     console.log('Your database is ready to use!');
