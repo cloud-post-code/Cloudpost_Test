@@ -201,6 +201,18 @@ async function runMigration() {
     console.log('Reading schema file...');
     let schema = fs.readFileSync(schemaPath, 'utf8');
 
+    // Replace hardcoded database name with Railway's database name
+    // schema.sql uses 'cloudpost_db' but Railway provides MYSQLDATABASE
+    const railwayDbName = config.database;
+    schema = schema.replace(/CREATE DATABASE IF NOT EXISTS `cloudpost_db`/gi, `CREATE DATABASE IF NOT EXISTS \`${railwayDbName}\``);
+    schema = schema.replace(/USE `cloudpost_db`/gi, `USE \`${railwayDbName}\``);
+    schema = schema.replace(/USE cloudpost_db/gi, `USE ${railwayDbName}`);
+    schema = schema.replace(/`cloudpost_db`/gi, `\`${railwayDbName}\``);
+    
+    console.log(`Using database name: ${railwayDbName}`);
+    console.log('(Replaced cloudpost_db references in schema.sql)');
+    console.log('');
+
     // Remove DELIMITER statements - they're not supported in mysql2
     // DELIMITER is only for mysql command-line client
     schema = schema.replace(/^DELIMITER\s+[^\n]*$/gim, '');
