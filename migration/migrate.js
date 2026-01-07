@@ -177,8 +177,65 @@ async function runMigration() {
     console.log('Running database schema migration...');
     console.log('This may take a few minutes...');
     
-    // Execute schema
-    await dbConnection.query(schema);
+    // Execute schema with error handling for existing tables
+    try {
+      await dbConnection.query(schema);
+    } catch (error) {
+      // Check if error is due to existing tables
+      if (error.code === 'ER_TABLE_EXISTS_ERROR' || 
+          (error.message && error.message.includes('already exists'))) {
+        console.log('');
+        console.log('⚠️  Some tables already exist. This is normal if migration was partially run.');
+        console.log('The migration script will continue and skip existing tables.');
+        console.log('');
+        
+        // Try to execute statements one by one to skip existing tables
+        const statements = schema
+          .split(';')
+          .map(s => s.trim())
+          .filter(s => s.length > 0 && !s.startsWith('--') && !s.startsWith('/*'));
+        
+        let successCount = 0;
+        let skipCount = 0;
+        let errorCount = 0;
+        
+        for (const statement of statements) {
+          try {
+            if (statement.toLowerCase().includes('create table')) {
+              // Check if table exists before creating
+              const tableMatch = statement.match(/create table\s+(?:if not exists\s+)?[`']?(\w+)[`']?/i);
+              if (tableMatch) {
+                const tableName = tableMatch[1];
+                const [tables] = await dbConnection.query(`SHOW TABLES LIKE '${tableName}'`);
+                if (tables.length > 0) {
+                  skipCount++;
+                  continue;
+                }
+              }
+            }
+            await dbConnection.query(statement);
+            successCount++;
+          } catch (stmtError) {
+            if (stmtError.code === 'ER_TABLE_EXISTS_ERROR' || 
+                (stmtError.message && stmtError.message.includes('already exists'))) {
+              skipCount++;
+            } else {
+              errorCount++;
+              console.error(`Error executing statement: ${stmtError.message.substring(0, 100)}`);
+            }
+          }
+        }
+        
+        console.log(`Migration completed: ${successCount} created, ${skipCount} skipped, ${errorCount} errors`);
+        
+        if (errorCount > 0) {
+          throw new Error(`Migration completed with ${errorCount} errors`);
+        }
+      } else {
+        throw error;
+      }
+    }
+    
     await dbConnection.end();
 
     console.log('');
