@@ -13,9 +13,11 @@ This guide shows you how to automatically run `database/schema.sql` when you dep
 4. Note: Railway provides these environment variables automatically:
    - `MYSQL_HOST`
    - `MYSQL_PORT` 
-   - `MYSQLUSER`
-   - `MYSQLPASSWORD`
-   - `MYSQLDATABASE`
+   - `MYSQLUSER` (note: no underscore)
+   - `MYSQLPASSWORD` (note: no underscore)
+   - `MYSQLDATABASE` (or `MYSQL_DATABASE` - Railway may provide both)
+   - `MYSQL_URL` (connection string)
+   - `MYSQL_ROOT_PASSWORD`
 
 ### 2. Create Database Migration Service
 1. In the same project, click "New Service" → Select **"GitHub Repo"** (or "Empty Service")

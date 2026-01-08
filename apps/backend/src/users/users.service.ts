@@ -31,7 +31,7 @@ export class UsersService {
       .limit(1);
 
     if (userRecords.length === 0) {
-      return null;
+    return null;
     }
 
     const user = userRecords[0];
@@ -53,7 +53,7 @@ export class UsersService {
       .limit(1);
 
     if (userRecords.length === 0) {
-      return null;
+    return null;
     }
 
     const user = userRecords[0];

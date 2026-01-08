@@ -10,9 +10,11 @@ This guide explains how to automatically run `database/schema.sql` on Railway My
 3. Railway will automatically create the MySQL service with these environment variables:
    - `MYSQL_HOST`
    - `MYSQL_PORT`
-   - `MYSQLUSER`
-   - `MYSQLPASSWORD`
-   - `MYSQLDATABASE`
+   - `MYSQLUSER` (note: no underscore)
+   - `MYSQLPASSWORD` (note: no underscore)
+   - `MYSQLDATABASE` (or `MYSQL_DATABASE` - Railway may provide both)
+   - `MYSQL_URL` (connection string)
+   - `MYSQL_ROOT_PASSWORD`
 
 ### Step 2: Create Migration Service
 1. Click "New Service" → Select "GitHub Repo" (or "Empty Service")

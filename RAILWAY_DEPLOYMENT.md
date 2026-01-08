@@ -59,25 +59,43 @@ Use the migration service approach - it's clean, runs once, and you can verify i
 
 ## Step 3: Backend Service Configuration
 
+### Build Settings
+
+- **Root Directory**: (empty/root) - **Important**: Leave empty to use workspace commands
+- **Build Command**: `npm install && npm run build --workspace=@cloudpost/backend`
+- **Start Command**: `npm start --workspace=@cloudpost/backend`
+
 ### Environment Variables
 
-Set these in Railway for the backend service:
+**Important**: This is a monorepo using npm workspaces. You must use **Variable References** to link MySQL variables.
+
+1. Go to Backend service → Settings → Variables
+2. Click "+ New Variable" → "Reference Variable"
+3. Select your MySQL service and create these references:
+
+| Backend Variable Name | Reference From MySQL Service |
+|----------------------|------------------------------|
+| `DB_HOST` | `MYSQL_HOST` |
+| `DB_PORT` | `MYSQL_PORT` |
+| `DB_USER` | `MYSQLUSER` |
+| `DB_PASSWORD` | `MYSQLPASSWORD` |
+| `DB_NAME` | `MYSQLDATABASE` (or `MYSQL_DATABASE`) |
+
+**Note**: Railway provides MySQL variables with names like `MYSQL_HOST`, `MYSQLUSER`, `MYSQLPASSWORD`, `MYSQLDATABASE`. Use Variable References to map them to the backend's expected names (`DB_HOST`, `DB_USER`, etc.).
+
+4. Add these variables directly (not referenced):
 
 ```
-DB_HOST=<railway-mysql-host>
-DB_PORT=3306
-DB_USER=<railway-mysql-user>
-DB_PASSWORD=<railway-mysql-password>
-DB_NAME=<railway-mysql-database>
 JWT_SECRET=<generate-a-secure-random-string>
 JWT_EXPIRES_IN=7d
 NODE_ENV=production
-BACKEND_PORT=3001
 ```
+
+**To generate JWT_SECRET**: Use `openssl rand -base64 32` or any secure random string generator.
 
 ### CORS URLs (Optional)
 
-If you want to restrict CORS, add:
+After deploying frontend services, add these to Backend environment variables:
 
 ```
 STOREFRONT_URL=https://your-storefront.railway.app
@@ -86,28 +104,32 @@ BUYER_PORTAL_URL=https://your-buyer-portal.railway.app
 ADMIN_PORTAL_URL=https://your-admin-portal.railway.app
 ```
 
-### Build Settings
-
-- **Root Directory**: `apps/backend`
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `npm start`
-
 ## Step 4: Frontend Services Configuration
 
 For each frontend service (seller-portal, buyer-portal, admin-portal, storefront):
 
+### Build Settings
+
+- **Root Directory**: (empty/root) - **Important**: Leave empty to use workspace commands
+- **Build Command**: `npm install && npm run build --workspace=@cloudpost/<service-name>`
+- **Start Command**: `npm start --workspace=@cloudpost/<service-name>`
+
+**Workspace names:**
+- Storefront: `@cloudpost/storefront`
+- Seller Portal: `@cloudpost/seller-portal`
+- Buyer Portal: `@cloudpost/buyer-portal`
+- Admin Portal: `@cloudpost/admin-portal`
+
 ### Environment Variables
+
+Add these directly in each frontend service:
 
 ```
 NEXT_PUBLIC_API_URL=https://your-backend.railway.app/api
 NODE_ENV=production
 ```
 
-### Build Settings
-
-- **Root Directory**: `apps/<service-name>`
-- **Build Command**: `npm install && npm run build`
-- **Start Command**: `npm start`
+**Note**: Replace `your-backend.railway.app` with your actual Backend service Railway domain (found in Backend service → Settings → Networking).
 
 ## Step 5: Service Dependencies
 
@@ -135,7 +157,9 @@ In Railway, configure service dependencies:
 ### Database Connection Issues
 
 - Verify MySQL service is running
-- Check environment variables are set correctly
+- **Check Variable References**: Ensure you used "Reference Variable" (not copied values) to link MySQL variables
+- Verify variable names match exactly (`DB_HOST` references `MYSQL_HOST`, `DB_USER` references `MYSQLUSER`, etc.)
+- Check that `DB_NAME` references `MYSQLDATABASE` (or `MYSQL_DATABASE` if that's what Railway shows)
 - Ensure database name matches in connection string
 
 ### CORS Errors
@@ -145,9 +169,12 @@ In Railway, configure service dependencies:
 
 ### Build Failures
 
-- Check that all dependencies are installed
+- **Monorepo Issues**: Ensure Root Directory is empty (root) for all services, not `apps/backend` or `apps/storefront`
+- **Workspace Dependencies**: Verify you're using workspace build commands (`--workspace=@cloudpost/...`)
+- Check that all dependencies are installed at root level
 - Verify Node.js version (>= 18.0.0)
 - Check build logs for specific errors
+- If workspace dependencies fail, ensure `npm install` runs at root before building
 
 ### Authentication Issues
 
@@ -157,8 +184,11 @@ In Railway, configure service dependencies:
 
 ## Notes
 
+- **Monorepo Setup**: This project uses npm workspaces. All services must use Root Directory = empty (root) and workspace build commands
 - The `railway.json` file in the root provides default build/deploy settings
 - Each service can override these settings in Railway dashboard
-- Use Railway's environment variable linking to share database credentials between services
+- **Variable References**: Always use Railway's "Reference Variable" feature to link MySQL variables - never copy/paste values
+- Railway automatically provides `PORT` environment variable - your apps will use it automatically
 - Monitor logs in Railway dashboard for debugging
+- Workspace dependencies (`@cloudpost/database`, `@cloudpost/shared`) are resolved when building from root
 
