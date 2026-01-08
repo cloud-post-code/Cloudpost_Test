@@ -1,11 +1,11 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS"
+    "builder": "NIXPACKS",
+    "buildCommand": "cd ../.. && npm install && npm run build --workspace=@cloudpost/admin-portal"
   },
   "deploy": {
-    "buildCommand": "npm install && npm run build --workspace=@cloudpost/admin-portal",
-    "startCommand": "npm start --workspace=@cloudpost/admin-portal",
+    "startCommand": "cd ../.. && npm start --workspace=@cloudpost/admin-portal",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
