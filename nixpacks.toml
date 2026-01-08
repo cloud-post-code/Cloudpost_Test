@@ -1,0 +1,19 @@
+[providers]
+node = "18"
+
+[phases.setup]
+nixPkgs = ["nodejs-18_x"]
+
+[phases.install]
+# Find repo root and install from there
+cmds = [
+  "ROOT=$(pwd); while [ ! -f \"$ROOT/package.json\" ] || ! grep -q '\"workspaces\"' \"$ROOT/package.json\" 2>/dev/null; do if [ \"$ROOT\" = \"/\" ]; then break; fi; ROOT=$(dirname \"$ROOT\"); done; cd \"$ROOT\" && npm install"
+]
+
+[phases.build]
+# Build will be handled by railway.json buildCommand which runs from root
+cmds = []
+
+[start]
+cmd = "echo 'Start command will be set by railway.json'"
+
