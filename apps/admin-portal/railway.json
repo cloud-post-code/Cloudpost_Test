@@ -2,10 +2,10 @@
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
     "builder": "NIXPACKS",
-    "buildCommand": "cd ../.. && npm install && npm run build --workspace=@cloudpost/admin-portal"
+    "buildCommand": "bash -c 'ROOT=$(pwd); while [ ! -f \"$ROOT/package.json\" ] || ! grep -q \\\"workspaces\\\" \"$ROOT/package.json\" 2>/dev/null; do ROOT=$(dirname \"$ROOT\"); done; cd \"$ROOT\" && npm install && npm run build --workspace=@cloudpost/admin-portal'"
   },
   "deploy": {
-    "startCommand": "cd ../.. && npm start --workspace=@cloudpost/admin-portal",
+    "startCommand": "bash -c 'ROOT=$(pwd); while [ ! -f \"$ROOT/package.json\" ] || ! grep -q \\\"workspaces\\\" \"$ROOT/package.json\" 2>/dev/null; do ROOT=$(dirname \"$ROOT\"); done; cd \"$ROOT\" && npm start --workspace=@cloudpost/admin-portal'",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
